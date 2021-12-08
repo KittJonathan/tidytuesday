@@ -40,7 +40,7 @@ p1 <- spiders %>%
   ggplot() +
     geom_smooth(mapping = aes(x = year, y = n),
                 se = FALSE,
-                colour = "darkblue", size = 2) +
+                colour = "#2e8de1", size = 2) +
     labs(x = "", y = "") +
     labs(caption = "#TidyTuesday 2021-12-07 | World Spiders Database") +
     ggtitle(label = "Number of spider species discovered by year") +
