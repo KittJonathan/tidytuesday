@@ -119,7 +119,7 @@ sentiments_plot <- ggplot(data = sentiments) +
   xlab("") +
   ylab("") +
   labs(caption = "#TidyTuesday 2021-12-14 | Spice Girls Data by @jacquietran") +
-  ggtitle(label = "Sentiment analysis on Spice Girls songs",
+  ggtitle(label = "Sentiment analysis of Spice Girls songs",
           subtitle = "Positive to negative ratio based on bing database") +
   theme_minimal() +
   theme(plot.background = element_rect(fill = "antiquewhite1"),
