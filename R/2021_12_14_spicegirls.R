@@ -14,8 +14,10 @@
 #install.packages("textdata")
 #install.packages("stopwords")
 #install.packages("wordcloud2")
+#install.packages("ggwordcloud")
 #install.packages("patchwork")
 #install.packages("showtext")
+#remotes::install_github("johnmackintosh/popthemes")
 
 # Load packages ----
 
@@ -25,13 +27,16 @@ library(tidytext)
 library(textdata)
 library(stopwords)
 library(wordcloud2)
-#library(showtext)
-#library(patchwork)
+library(showtext)
+library(webshot)
+library(popthemes)
+library(patchwork)
 
 # Import fonts ----
 
 showtext_auto()
-font_add_google("Poiret One")
+#font_add_google("Poiret One")
+font_add_google("Quicksand")
 
 # Import dataset ----
 
@@ -97,40 +102,146 @@ rm(clean_names)
 #https://peerchristensen.netlify.app/post/fair-is-foul-and-foul-is-fair-a-tidytext-entiment-analysis-of-shakespeare-s-tragedies/
 
 sentiments <- lyrics %>% 
-  dplyr::group_by(id) %>% 
-  tidytext::unnest_tokens(word, line)
+  dplyr::group_by(id, album_name, track_name) %>% 
+  tidytext::unnest_tokens(word, line) %>% 
+  dplyr::inner_join(tidytext::get_sentiments("bing")) %>% 
+  dplyr::count(sentiment) %>% 
+  tidyr::spread(sentiment, n, fill = 0) %>% 
+  dplyr::mutate(ratio = (positive - negative) / (positive + negative)) %>% 
+  dplyr::select(id:track_name, ratio) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(track_name = forcats::fct_reorder(track_name, rev(id))) %>% 
+  dplyr::mutate(type = ifelse(ratio < 0, "negative", "positive"))
+
+sentiments_plot <- ggplot(data = sentiments) +
+  geom_point(aes(x = ratio, y = track_name,
+                 colour = type),
+             size = 2,
+             show.legend = FALSE) +
+  geom_segment(aes(x = 0, xend = ratio,
+                   y = rev(id), yend = rev(id),
+                   colour = type), size = 0.5,
+               show.legend = FALSE) +
+  scale_colour_manual(values = c("negative" = "red3",
+                                 "positive" = "green4")) +
+  geom_vline(xintercept = 0) +
+  xlim(c(-1, 1)) +
+  xlab("") +
+  ylab("") +
+  labs(caption = "#TidyTuesday 2021-12-14 | Spice Girls Data by @jacquietran") +
+  ggtitle(label = "Sentiment analysis on Spice Girls songs",
+          subtitle = "Positive to negative ratio based on bing database") +
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "antiquewhite1"),
+        plot.title = element_text(family = "Quicksand",
+                                  hjust = 0.5, size = 45,
+                                  margin = margin(0, 0, 10, 0)),
+        plot.subtitle = element_text(family = "Quicksand",
+                                      hjust = 0.5, size = 35,
+                                     margin = margin(0, 0, 30, 0)),
+        axis.ticks.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(colour = 'grey70', linetype = "dashed"),
+        axis.text = element_text(family = "Quicksand", size = 25),
+        plot.caption = element_text(family = "Quicksand",
+                                    size = 20,
+                                    hjust = 0.5))
+
+ggsave("figs/2021_12_14_spice.png", dpi = 320, width = 12, height = 6)
+
+# Comparing minor and major modes ----
+
+modes <- tracks %>% 
+  dplyr::group_by(mode_name) %>% 
+  dplyr::summarise(mean_danceability = mean(danceability),
+                   mean_energy = mean(energy),
+                   mean_tempo = mean(tempo))
+
+modes  
+
+head(tracks)
+
+characteristics <- tracks %>% 
+  dplyr::select(id, danceability:tempo) %>% 
+  tidyr::pivot_longer(!id)
+
+ggplot(data = characteristics,
+       mapping = aes(x = id, y = name, fill = value)) +
+  geom_tile()
+  
+
+# Word clouds ----
 
 
 
+
+
+  #scale_radius(range = c(0, 20), limits = c(0, NA))
+
+wasting_my_time_words <- lyrics %>% 
+  dplyr::filter(track_name == "Wasting My Time") %>% 
+  tidytext::unnest_tokens(word, line) %>% 
+  dplyr::anti_join(tidytext::get_stopwords()) %>% 
+  dplyr::count(word, sort = T) %>% 
+  head(10) %>% 
+  ggplot(aes(label = word,
+             size = n,
+             colour = factor(sample.int(11, nrow(.), replace = TRUE)))) +
+    ggwordcloud::geom_text_wordcloud_area() +
+    scale_size_area(max_size = 50) +
+    popthemes::scale_colour_spice() +
+  ggtitle(label = "10 most used words in Wasting My Time") +
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "antiquewhite1"),
+        plot.title = element_text(family = "Quicksand",
+                                  hjust = 0.5, size = 25,
+                                  margin = margin(0, 0, 10, 0)),
+        axis.ticks.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(colour = 'grey50'),
+        axis.text = element_text(family = "Quicksand", size = 15))
+
+wasting_my_time_words
+
+viva_forever_words <- lyrics %>% 
+  dplyr::filter(track_name == "Viva Forever") %>% 
+  tidytext::unnest_tokens(word, line) %>% 
+  dplyr::anti_join(tidytext::get_stopwords()) %>% 
+  dplyr::count(word, sort = T) %>% 
+  head(10) %>% 
+  ggplot(aes(label = word,
+             size = n,
+             colour = factor(sample.int(11, nrow(.), replace = TRUE)))) +
+  ggwordcloud::geom_text_wordcloud_area() +
+  scale_size_area(max_size = 50) +
+  popthemes::scale_colour_spice() +
+  ggtitle(label = "10 most used words in Viva Forever") +
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "antiquewhite1"),
+        plot.title = element_text(family = "Quicksand",
+                                  hjust = 0.5, size = 25,
+                                  margin = margin(0, 0, 10, 0)),
+        axis.ticks.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(colour = 'grey50'),
+        axis.text = element_text(family = "Quicksand", size = 15))
+
+viva_forever_words
+
+spice_girls <- sentiments_plot / (viva_forever_words + wasting_my_time_words)
+  
+spice_girls
+
+ggsave("figs/2021_12_14_spice.png", dpi = 320, width = 12, height = 6)
 
 # Testing tidytext package ----
 
 bing_sentiments <- lyrics %>% 
   group_by(album_name, track_number) %>% 
-  unnest_tokens(word, line) %>% 
-  #anti_join(stop_words) %>% 
-  inner_join(get_sentiments("bing")) %>% 
-  count(sentiment) %>% 
-  spread(sentiment, n, fill = 0) %>% 
-  mutate(sentiment_score = (positive - negative) / (positive + negative)) %>% 
-  select(album_name, track_number, sentiment_score)
 
-nrc_sentiments <- lyrics %>% 
-  group_by(album_name, track_number) %>% 
-  unnest_tokens(word, line) %>% 
-  #anti_join(stop_words) %>% 
-  inner_join(get_sentiments("nrc")) %>% 
-  count(sentiment) %>% 
-  ggplot(aes(x = sentiment, y = n, fill = sentiment)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~(album_name))
-  
-
-modes <- tracks %>% 
-  select(album_name, track_number, mode_name)
-
-sentiment_mode <- sentiments %>% 
-  left_join(modes)
 
 valence <- tracks %>% 
   select(album_name, track_number, valence) %>% 
@@ -141,19 +252,7 @@ head(lyrics)
 
 lyrics %>% map_dbl(n_distinct)
 
-wannabe_lyrics <- lyrics %>% 
-  filter(song_name == "Wannabe") %>% 
-  select(line)
 
-words <- wannabe_lyrics %>% 
-  unnest_tokens(word, line) %>% 
-  select(word)
-
-clean_words <- words %>% 
-  anti_join(get_stopwords()) %>% 
-  count(word, sort = T) %>% 
-  top_n(150) %>% 
-  wordcloud2(size = .7)
 
 sentiments <- get_sentiments("nrc")
 
