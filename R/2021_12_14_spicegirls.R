@@ -39,31 +39,70 @@ tuesdata <- tidytuesdayR::tt_load('2021-12-14')
 
 lyrics <- tuesdata$lyrics
 tracks <- tuesdata$studio_album_tracks
+# I won't be looking at the related_artists dataset
 
 rm(tuesdata)
 
 # Clean datasets ----
 
+# Clean lyrics dataset
 lyrics <- lyrics %>%
   dplyr::select(album_name,
                 track_number,
                 track_name = song_name,
                 line_number:section_artist)
 
+# Clean tracks dataset
 tracks <- tracks %>% 
-  select(album_name,
-         year = album_release_year,
-         track_number,
-         track_name,
-         danceability,
-         energy,
-         loudness,
-         speechiness:tempo,
-         duration_ms,
-         key_name,
-         mode_name) %>% 
-  dplyr::arrange(year, track_number)
-  
+  dplyr::select(album_name,
+                year = album_release_year,
+                track_number,
+                track_name,
+                danceability,
+                energy,
+                loudness,
+                speechiness:tempo,
+                duration_ms,
+                key_name,
+                mode_name) %>% 
+  dplyr::arrange(year, track_number) %>% 
+  dplyr::mutate(id = 1:31) %>%  # add index 
+  dplyr::select(id, everything())
+
+# extract list of ids with matching tracks 
+idx <- tracks %>% 
+  dplyr::select(album_name, track_number, id)
+
+# add id to lyrics dataset
+lyrics <- lyrics %>% 
+  dplyr::left_join(idx) %>% 
+  dplyr::select(id, everything())
+
+rm(idx)
+
+# Clean track names in lyrics dataset
+clean_names <- tracks %>% 
+  dplyr::select(id, clean_name = track_name)
+
+lyrics <- lyrics %>% 
+  dplyr::left_join(clean_names) %>% 
+  dplyr::select(id:track_number,
+                track_name = clean_name,
+                line_number:section_artist)
+
+rm(clean_names)
+
+# Sentiment analysis ----
+
+#https://peerchristensen.netlify.app/post/fair-is-foul-and-foul-is-fair-a-tidytext-entiment-analysis-of-shakespeare-s-tragedies/
+
+sentiments <- lyrics %>% 
+  dplyr::group_by(id) %>% 
+  tidytext::unnest_tokens(word, line)
+
+
+
+
 # Testing tidytext package ----
 
 bing_sentiments <- lyrics %>% 
