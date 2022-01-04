@@ -21,24 +21,52 @@ font_add_google("Quicksand")
 
 # Import datasets ----
 
-colors <- readr::read_csv("data/lego_colors.csv")
-inventories <- readr::read_csv("data/inventories.csv")
-inventory_parts <- readr::read_csv("data/inventory_parts.csv")
-inventory_sets <- readr::read_csv("data/inventory_sets.csv")
-part_categories
-parts
-sets
-themes
-
-tuesdata <- tidytuesdayR::tt_load('2021-12-14')
-
-lyrics <- tuesdata$lyrics
-tracks <- tuesdata$studio_album_tracks
-# I won't be looking at the related_artists dataset
-
-rm(tuesdata)
+colors <- readr::read_csv("data/kaggle_lego/colors.csv")
+inventories <- readr::read_csv("data/kaggle_lego/inventories.csv")
+inventory_parts <- readr::read_csv("data/kaggle_lego/inventory_parts.csv")
+inventory_sets <- readr::read_csv("data/kaggle_lego/inventory_sets.csv")
+part_categories <- readr::read_csv("data/kaggle_lego/part_categories.csv")
+parts <- readr::read_csv("data/kaggle_lego/parts.csv")
+sets <- readr::read_csv("data/kaggle_lego/sets.csv")
+themes <- readr::read_csv("data/kaggle_lego/themes.csv")
 
 # Clean datasets ----
+
+# Change column names so they match between datasets
+# Add "#" in front of hex codes in colors
+
+colors <- colors %>% 
+  dplyr::select(color_id = id,
+                color_name = name,
+                color_hex = rgb,
+                color_trans = is_trans) %>% 
+  dplyr::mutate(color_hex = paste0("#", color_hex))
+
+inventories <- inventories %>% 
+  dplyr::select(inventory_id = id,
+                version_number = version,
+                set_number = set_num)
+
+inventory_parts <- inventory_parts %>% 
+  dplyr::select(inventory_id,
+                part_number = part_num,
+                quantity,
+                is_spare)
+
+inventory_sets <- inventory_sets %>% 
+  dplyr::select(inventory_id,
+                set_number = set_num,
+                quantity)
+
+parts <- parts %>% 
+  dplyr::select(part_num,
+                part_name = name,
+                part_cat_id)
+
+part_categories <- part_categories %>% 
+  dplyr::select(part_cat_id = id,)
+
+
 
 # Clean lyrics dataset
 lyrics <- lyrics %>%
