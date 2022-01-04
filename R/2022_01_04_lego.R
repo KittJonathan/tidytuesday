@@ -32,6 +32,12 @@ themes <- readr::read_csv("data/kaggle_lego/themes.csv")
 
 # Clean datasets ----
 
+head(themes, 2)
+summary(themes$parent_id)
+
+parent_themes <- themes %>% 
+  dplyr::filter(is.na(parent_id))
+
 # Change column names so they match between datasets
 # Add "#" in front of hex codes in colors
 
