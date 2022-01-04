@@ -35,6 +35,22 @@ parts <- readr::read_csv("data/kaggle_lego/parts.csv")
 sets <- readr::read_csv("data/kaggle_lego/sets.csv")
 themes <- readr::read_csv("data/kaggle_lego/themes.csv")
 
+# Explore Weetabix castle data ----
+
+weetabix_castle_set <- sets %>% 
+  dplyr::filter(set_num == "00-1")
+
+themes %>% 
+  dplyr::filter(id == weetabix_castle_set$theme_id)
+# theme id 414 : Castle
+# parent_id 411 : Legoland
+
+weetabix_castle_inventory <- inventories %>% 
+  dplyr::filter(set_num == weetabix_castle_set$set_num)
+
+weetabix_castle_inventory_sets <- inventory_sets %>% 
+  dplyr::filter(set_num == weetabix_castle_set$set_num)
+
 # Clean datasets ----
 
 head(themes, 2)
