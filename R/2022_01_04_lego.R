@@ -4,6 +4,11 @@
 # Lego database from Kaggle
 # https://www.kaggle.com/rtatman/lego-database
 
+# Examples ----
+
+# https://medium.com/analytics-vidhya/exploratory-analysis-on-lego-dataset-8967e37fc5dd
+# https://mode.com/blog/lego-data-analysis/
+
 # Install packages ----
 
 # If needed, uncomment lines to install
