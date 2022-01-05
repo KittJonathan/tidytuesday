@@ -35,6 +35,11 @@ parts <- readr::read_csv("data/kaggle_lego/parts.csv")
 sets <- readr::read_csv("data/kaggle_lego/sets.csv")
 themes <- readr::read_csv("data/kaggle_lego/themes.csv")
 
+# Extract colors for Weetabix Castle ----
+
+sets %>% 
+  head(1)
+
 # Explore Weetabix castle data ----
 
 weetabix_castle_set <- sets %>% 
