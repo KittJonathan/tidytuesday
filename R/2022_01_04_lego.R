@@ -65,6 +65,8 @@ inventory_parts %>%
 weetabix_castle_set <- sets %>% 
   dplyr::filter(set_num == "00-1")
 
+# colors match the pictures found on internet
+
 themes %>% 
   dplyr::filter(id == weetabix_castle_set$theme_id)
 # theme id 414 : Castle
