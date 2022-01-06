@@ -37,8 +37,28 @@ themes <- readr::read_csv("data/kaggle_lego/themes.csv")
 
 # Extract colors for Weetabix Castle ----
 
+colors <- colors %>% 
+  select(color_id = id,
+         everything())
+
 sets %>% 
-  head(1)
+  head(1)  # set_num 00-1
+
+inventories %>% 
+  filter(set_num == "00-1")  # id 5574
+
+inventory_parts %>% 
+  filter(inventory_id == "5574") %>% 
+  distinct(color_id) %>% 
+  left_join(colors)
+
+part_categories <- part_categories %>% 
+  select(part_cat_id = id,
+         name)
+
+inventory_parts %>% 
+  filter(inventory_id == "5574") %>% 
+  left_join(part_categories)
 
 # Explore Weetabix castle data ----
 
