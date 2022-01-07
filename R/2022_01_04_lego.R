@@ -26,14 +26,64 @@ font_add_google("Quicksand")
 
 # Import datasets ----
 
-colors <- readr::read_csv("data/kaggle_lego/colors.csv")
-inventories <- readr::read_csv("data/kaggle_lego/inventories.csv")
-inventory_parts <- readr::read_csv("data/kaggle_lego/inventory_parts.csv")
-inventory_sets <- readr::read_csv("data/kaggle_lego/inventory_sets.csv")
-part_categories <- readr::read_csv("data/kaggle_lego/part_categories.csv")
-parts <- readr::read_csv("data/kaggle_lego/parts.csv")
-sets <- readr::read_csv("data/kaggle_lego/sets.csv")
-themes <- readr::read_csv("data/kaggle_lego/themes.csv")
+colors <- read_csv("data/kaggle_lego/colors.csv")
+inventories <- read_csv("data/kaggle_lego/inventories.csv")
+inventory_parts <- read_csv("data/kaggle_lego/inventory_parts.csv")
+inventory_sets <- read_csv("data/kaggle_lego/inventory_sets.csv")
+part_categories <- read_csv("data/kaggle_lego/part_categories.csv")
+parts <- read_csv("data/kaggle_lego/parts.csv")
+sets <- read_csv("data/kaggle_lego/sets.csv")
+themes <- read_csv("data/kaggle_lego/themes.csv")
+
+# Prepare and clean data ----
+
+# Find Middle-Earth theme names and ids
+themes %>% 
+  filter(str_detect(name, "Hobbit|Lord"))  # parent ids : 561, 562, 566
+
+middle_earth_themes <- themes %>% 
+  filter(parent_id %in% c(561, 562, 566)) %>% 
+  select(theme_id = id, theme_name = name)
+  
+# Extract sets with Middle-Earth themes
+middle_earth_sets <- sets %>% 
+  filter(theme_id %in% middle_earth_themes$theme_id) %>% 
+  left_join(middle_earth_themes)
+
+# Extract inventories from Middle-Earth themed sets
+middle_earth_inventories <- inventories %>% 
+  filter(set_num %in% middle_earth_sets$set_num) %>% 
+  left_join(middle_earth_sets)
+
+# Extract inventory parts from Middle-Earth themes sets
+middle_earth_inventory_parts <- inventory_parts %>% 
+  filter(inventory_id %in% middle_earth_inventories$id) %>% 
+  select(id = inventory_id, everything()) %>% 
+  left_join(middle_earth_inventories) %>% 
+  select(year, theme_name, set_name = name, num_parts, color_id)
+
+# Extract colors for Middle-Earth themed sets
+middle_earth_colors <- colors %>% 
+  filter(id %in% middle_earth_inventory_parts$color_id) %>% 
+  select(color_id = id, hex = rgb)
+
+# Create dataset for plots
+d1 <- middle_earth_inventory_parts %>% 
+  left_join(middle_earth_colors) %>% 
+  mutate(hex = paste0("#", hex)) %>% 
+  select(year:num_parts, hex) %>% 
+  arrange(year, set_name)
+
+# Clear working environment
+rm(colors, inventories, inventory_parts, inventory_sets,
+   middle_earth_colors, middle_earth_inventories, middle_earth_inventory_parts,
+   middle_earth_sets, middle_earth_themes, part_categories, parts, sets, themes)
+  
+
+# Subset Middle-Earth colors
+colors <- colors %>% 
+  dplyr::filter(id %in% inventory_parts$color_id)
+
 
 # Extract colors for Weetabix Castle ----
 
