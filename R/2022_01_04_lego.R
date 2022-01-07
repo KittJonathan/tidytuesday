@@ -18,13 +18,6 @@
 # Load packages ----
 
 library(tidyverse)
-library(showtext)
-
-# Import fonts ----
-
-#showtext_auto()
-font_add_google("MedievalSharp", "medieval")
-font_add("medieval", "../Downloads/Eagle_Lake,Genos,MedievalSharp,Quicksand,UnifrakturCook/MedievalSharp/MedievalSharp-Regular.ttf")
 
 # Import datasets ----
 
@@ -100,7 +93,8 @@ col_count <- d1 %>%
                        theme_name == "The Two Towers" ~ 1,
                        theme_name == "The Return of the King" ~ 0))
 
-# Test plot
+# Create plot ----
+
 ggplot(data = col_count) +
   geom_segment(aes(x = x, xend = xend,
                    y = y, yend = y),
@@ -108,8 +102,7 @@ ggplot(data = col_count) +
                size = 20) +
   geom_text(mapping = aes(x = 0, y = y + 0.5,
                           label = theme_name,
-                          hjust = 0)) +
-  theme(text = element_text(family = "Palatino"))
+                          hjust = 0))
 
 
 test <- col_count %>% 
