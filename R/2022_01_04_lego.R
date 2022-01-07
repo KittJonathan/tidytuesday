@@ -23,7 +23,7 @@ library(showtext)
 # Import fonts ----
 
 #showtext_auto()
-font_add_google(name = "MedievalSharp", family = "medievalsharp-cursive")
+font_add_google("MedievalSharp", "medieval")
 font_add("medieval", "../Downloads/Eagle_Lake,Genos,MedievalSharp,Quicksand,UnifrakturCook/MedievalSharp/MedievalSharp-Regular.ttf")
 
 # Import datasets ----
