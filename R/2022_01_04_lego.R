@@ -78,7 +78,26 @@ d1 <- middle_earth_inventory_parts %>%
 rm(colors, inventories, inventory_parts, inventory_sets,
    middle_earth_colors, middle_earth_inventories, middle_earth_inventory_parts,
    middle_earth_sets, middle_earth_themes, part_categories, parts, sets, themes)
-  
+
+# Extract color palette for each movie ----
+
+# Count number of occurences of each color by movie
+col_count <- d1 %>% 
+  filter(!theme_name %in% c("The Lord of the Rings", "The Hobbit")) %>% 
+  count(theme_name, hex) %>% 
+  group_by(theme_name) %>% 
+  top_n(n = 5) %>% 
+  arrange(theme_name, desc(n)) %>% 
+  ungroup() %>% 
+  mutate(x = rep(1:5, 6),
+         y = rep(1:6, each = 5))
+
+ggplot(data = col_count,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(aes(size = n),
+             colour = hex)
+
 
 # Subset Middle-Earth colors
 colors <- colors %>% 
