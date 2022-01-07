@@ -95,190 +95,20 @@ col_count <- d1 %>%
 
 # Create plot ----
 
-ggplot(data = col_count) +
+p <- ggplot(data = col_count) +
   geom_segment(aes(x = x, xend = xend,
                    y = y, yend = y),
                colour = col_count$hex,
-               size = 20) +
-  geom_text(mapping = aes(x = 0, y = y + 0.5,
+               size = 15) +
+  geom_text(mapping = aes(x = 0, y = y + 0.45,
                           label = theme_name,
-                          hjust = 0))
+                          hjust = 0),
+            size = 6) +
+  ggtitle("Colour palettes for Middle-Earth themed Lego sets") +
+  theme_void() +
+  theme(plot.title = element_text(size = 25, hjust = 0.5))
 
-
-test <- col_count %>% 
-  filter(theme_name == "An Unexpected Journey")
-
-test <- col_count %>% 
-  filter(theme_name == "The Two Towers")
-
-ggplot(data = test) +
-  geom_segment(aes(x = 0, xend = 5,
-                   y = 0, yend = 0),
-               colour = test$hex[1],
-               size = 10) +
-  geom_segment(aes(x = 5, xend = 10,
-                   y = 0, yend = 0),
-               colour = test$hex[2],
-               size = 10) +
-geom_segment(aes(x = 10, xend = 15,
-                 y = 0, yend = 0),
-             colour = test$hex[3],
-             size = 10) +
-  geom_segment(aes(x = 15, xend = 20,
-                   y = 0, yend = 0),
-               colour = test$hex[4],
-               size = 10) +
-  geom_segment(aes(x = 20, xend = 25,
-                   y = 0, yend = 0),
-               colour = test$hex[5],
-               size = 10)
-  
-
-ggplot(data = col_count,
-       mapping = aes(x = x,
-                     y = y)) +
-  geom_point(aes(size = n),
-             colour = hex)
-
-
-# Subset Middle-Earth colors
-colors <- colors %>% 
-  dplyr::filter(id %in% inventory_parts$color_id)
-
-
-# Extract colors for Weetabix Castle ----
-
-colors <- colors %>% 
-  select(color_id = id,
-         everything())
-
-sets %>% 
-  head(1)  # set_num 00-1
-
-inventories %>% 
-  filter(set_num == "00-1")  # id 5574
-
-inventory_parts %>% 
-  filter(inventory_id == "5574") %>% 
-  distinct(color_id) %>% 
-  left_join(colors)
-
-part_categories <- part_categories %>% 
-  select(part_cat_id = id,
-         name)
-
-inventory_parts %>% 
-  filter(inventory_id == "5574") %>% 
-  left_join(part_categories)
-
-# Explore Weetabix castle data ----
-
-weetabix_castle_set <- sets %>% 
-  dplyr::filter(set_num == "00-1")
-
-# colors match the pictures found on internet
-
-themes %>% 
-  dplyr::filter(id == weetabix_castle_set$theme_id)
-# theme id 414 : Castle
-# parent_id 411 : Legoland
-
-weetabix_castle_inventory <- inventories %>% 
-  dplyr::filter(set_num == weetabix_castle_set$set_num)
-
-weetabix_castle_inventory_sets <- inventory_sets %>% 
-  dplyr::filter(set_num == weetabix_castle_set$set_num)
-
-# Clean datasets ----
-
-head(themes, 2)
-summary(themes$parent_id)
-
-parent_themes <- themes %>% 
-  dplyr::filter(is.na(parent_id))
-
-# Change column names so they match between datasets
-# Add "#" in front of hex codes in colors
-
-colors <- colors %>% 
-  dplyr::select(color_id = id,
-                color_name = name,
-                color_hex = rgb,
-                color_trans = is_trans) %>% 
-  dplyr::mutate(color_hex = paste0("#", color_hex))
-
-inventories <- inventories %>% 
-  dplyr::select(inventory_id = id,
-                version_number = version,
-                set_number = set_num)
-
-inventory_parts <- inventory_parts %>% 
-  dplyr::select(inventory_id,
-                part_number = part_num,
-                quantity,
-                is_spare)
-
-inventory_sets <- inventory_sets %>% 
-  dplyr::select(inventory_id,
-                set_number = set_num,
-                quantity)
-
-parts <- parts %>% 
-  dplyr::select(part_num,
-                part_name = name,
-                part_cat_id)
-
-part_categories <- part_categories %>% 
-  dplyr::select(part_cat_id = id,)
-
-
-
-# Clean lyrics dataset
-lyrics <- lyrics %>%
-  dplyr::select(album_name,
-                track_number,
-                track_name = song_name,
-                line_number:section_artist)
-
-# Clean tracks dataset
-tracks <- tracks %>% 
-  dplyr::select(album_name,
-                year = album_release_year,
-                track_number,
-                track_name,
-                danceability,
-                energy,
-                loudness,
-                speechiness:tempo,
-                duration_ms,
-                key_name,
-                mode_name) %>% 
-  dplyr::arrange(year, track_number) %>% 
-  dplyr::mutate(id = 1:31) %>%  # add index 
-  dplyr::select(id, everything())
-
-# extract list of ids with matching tracks 
-idx <- tracks %>% 
-  dplyr::select(album_name, track_number, id)
-
-# add id to lyrics dataset
-lyrics <- lyrics %>% 
-  dplyr::left_join(idx) %>% 
-  dplyr::select(id, everything())
-
-rm(idx)
-
-# Clean track names in lyrics dataset
-clean_names <- tracks %>% 
-  dplyr::select(id, clean_name = track_name)
-
-lyrics <- lyrics %>% 
-  dplyr::left_join(clean_names) %>% 
-  dplyr::select(id:track_number,
-                track_name = clean_name,
-                line_number:section_artist)
-
-rm(clean_names)
+ggsave("figs/2022_01_04_lego.png", p, dpi = 320, width = 12, height = 6)
 
 # Sentiment analysis ----
 
