@@ -18,11 +18,13 @@
 # Load packages ----
 
 library(tidyverse)
+library(showtext)
 
 # Import fonts ----
 
-showtext_auto()
-font_add_google("Quicksand")
+#showtext_auto()
+font_add_google(name = "MedievalSharp", family = "medievalsharp-cursive")
+font_add("medieval", "../Downloads/Eagle_Lake,Genos,MedievalSharp,Quicksand,UnifrakturCook/MedievalSharp/MedievalSharp-Regular.ttf")
 
 # Import datasets ----
 
@@ -89,8 +91,55 @@ col_count <- d1 %>%
   top_n(n = 5) %>% 
   arrange(theme_name, desc(n)) %>% 
   ungroup() %>% 
-  mutate(x = rep(1:5, 6),
-         y = rep(1:6, each = 5))
+  mutate(x = rep(seq(0, 20, 5), times = 6),
+         xend = rep(seq(5, 25, 5), times = 6),
+         y = case_when(theme_name == "An Unexpected Journey" ~ 5,
+                       theme_name == "The Desolation of Smaug" ~ 4,
+                       theme_name == "The Battle of the Five Armies" ~ 3,
+                       theme_name == "The Fellowship of the Ring"  ~ 2,
+                       theme_name == "The Two Towers" ~ 1,
+                       theme_name == "The Return of the King" ~ 0))
+
+# Test plot
+ggplot(data = col_count) +
+  geom_segment(aes(x = x, xend = xend,
+                   y = y, yend = y),
+               colour = col_count$hex,
+               size = 20) +
+  geom_text(mapping = aes(x = 0, y = y + 0.5,
+                          label = theme_name,
+                          hjust = 0)) +
+  theme(text = element_text(family = "Palatino"))
+
+
+test <- col_count %>% 
+  filter(theme_name == "An Unexpected Journey")
+
+test <- col_count %>% 
+  filter(theme_name == "The Two Towers")
+
+ggplot(data = test) +
+  geom_segment(aes(x = 0, xend = 5,
+                   y = 0, yend = 0),
+               colour = test$hex[1],
+               size = 10) +
+  geom_segment(aes(x = 5, xend = 10,
+                   y = 0, yend = 0),
+               colour = test$hex[2],
+               size = 10) +
+geom_segment(aes(x = 10, xend = 15,
+                 y = 0, yend = 0),
+             colour = test$hex[3],
+             size = 10) +
+  geom_segment(aes(x = 15, xend = 20,
+                   y = 0, yend = 0),
+               colour = test$hex[4],
+               size = 10) +
+  geom_segment(aes(x = 20, xend = 25,
+                   y = 0, yend = 0),
+               colour = test$hex[5],
+               size = 10)
+  
 
 ggplot(data = col_count,
        mapping = aes(x = x,
