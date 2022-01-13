@@ -13,13 +13,13 @@
 
 library(tidytuesdayR)
 library(tidyverse)
+#library(rgdal)
 #library(geojsonio)
 #library(broom)
 #library(rgeos)
 #library(gpclib)
 #library(maptools)
 #library(RColorBrewer)
-#library(rgdal)
 #library(maps)
 #library(showtext)
 #library(ggrepel)
@@ -39,7 +39,49 @@ colony <- tuesdata$colony
 stressor <- tuesdata$stressor
 rm(tuesdata)
 
+# Data wrangling ----
+
+
+
+# Testing hex map ----
+
+us <- rgdal::readOGR("data/us_states_hexgrid.geojson")
+plot(us)
+
+us_map <- ggplot2::fortify(us, region = "iso3166_2")
+
+ggplot() +
+  geom_map(data = us_map,
+           map = us_map,
+           mapping = aes(x = long,
+                         y = lat,
+                         map_id = id),
+           colour = "white",
+           size = 0.5) +
+  geom_map(data = us@data,
+           map = us_map,
+           mapping = aes(fill = bees,
+                         map_id = iso3166_2)) +
+  labs(x = "",
+       y = "") +
+  theme_minimal() +
+  theme(panel.border = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank())
+
+ggplot2::ggplot(data = us_map,
+                mapping = aes(map_id = id,
+                              x = long,
+                              y = lat)) +
+  ggplot2::geom_map(map = us_map,
+                    colour = "black",
+                    fill = "white")
+
 # Create empty hex map of US states ----
+
+rgdal::ogrInfo("data/us_states_hexgrid.geojson")
+us <- rgdal::readOGR("data/us_states_hexgrid.geojson")
+plot(us)
 
 # Turn on the license
 maptools::gpclibPermit()
