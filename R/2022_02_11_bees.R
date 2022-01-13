@@ -37,7 +37,7 @@ library(tidyverse)
 tuesdata <- tidytuesdayR::tt_load('2022-01-11')
 #colony <- tuesdata$colony
 stressor <- tuesdata$stressor
-rm(tuesdata)
+#rm(tuesdata)
 
 # Data wrangling ----
 
@@ -58,6 +58,16 @@ selected_years <- stressor %>%
   select(min_year, max_year) %>% 
   distinct() %>% 
   unlist()
+
+# Filter stressor data based on selected years
+
+varroa <- stressor %>% 
+  filter(stressor == "Varroa mites",
+         year %in% selected_years)
+
+# Clean environment
+
+rm(stressor, selected_years, tuesdata)
 
 
 # Then I extract the earliest and latest years without NAs
