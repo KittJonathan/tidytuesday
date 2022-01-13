@@ -35,13 +35,58 @@ library(tidyverse)
 # Import dataset ----
 
 tuesdata <- tidytuesdayR::tt_load('2022-01-11')
-colony <- tuesdata$colony
+#colony <- tuesdata$colony
 stressor <- tuesdata$stressor
 rm(tuesdata)
 
 # Data wrangling ----
 
+# I'll be looking at % of colonies affected by Varroa mites
+# and comparing the % between years. I want to use years with no NAs,
 
+# First I count the number of NAs by year, then I extract the earliest
+# and latest years without NAs and put them in a vector
+
+selected_years <- stressor %>% 
+  filter(stressor == "Varroa mites") %>% 
+  group_by(year) %>% 
+  summarise(na_count = sum(is.na(stress_pct))) %>% 
+  filter(na_count == 0) %>% 
+  mutate(min_year = min(year),
+         max_year = max(year)) %>% 
+  ungroup() %>% 
+  select(min_year, max_year) %>% 
+  distinct() %>% 
+  unlist()
+
+
+# Then I extract the earliest and latest years without NAs
+
+selected_years <- year_nas %>% 
+  filter(!is.na(na_count))
+
+
+varroa <- 
+
+head(colony)
+head(stressor)
+
+summary(colony$year)
+summary(stressor$year)
+
+varroa_2015 <- stressor %>% 
+  filter(year == 2015,
+         stressor == "Varroa mites")
+
+varroa_2020 <- stressor %>% 
+  filter(year == 2020,
+         stressor == "Varroa mites")
+
+total_colonies <- colony %>% 
+  group_by(year, state) %>% 
+  summarise(total = sum(colony_n)) %>% 
+  filter(year %in% c(2015, 2021)) %>% 
+  mutate(n_2015 = )
 
 # Testing hex map ----
 
