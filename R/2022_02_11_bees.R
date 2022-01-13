@@ -13,11 +13,11 @@
 
 library(tidytuesdayR)
 library(tidyverse)
-library(geojsonio)
-library(broom)
-library(rgeos)
-library(gpclib)
-library(maptools)
+#library(geojsonio)
+#library(broom)
+#library(rgeos)
+#library(gpclib)
+#library(maptools)
 #library(RColorBrewer)
 #library(rgdal)
 #library(maps)
@@ -37,6 +37,7 @@ library(maptools)
 tuesdata <- tidytuesdayR::tt_load('2022-01-11')
 colony <- tuesdata$colony
 stressor <- tuesdata$stressor
+rm(tuesdata)
 
 # Create empty hex map of US states ----
 
