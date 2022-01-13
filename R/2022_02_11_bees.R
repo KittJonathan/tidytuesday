@@ -65,6 +65,15 @@ varroa <- stressor %>%
   filter(stressor == "Varroa mites",
          year %in% selected_years)
 
+# Calculate stress % differences between 2015 and 2020 for each state and 
+# months, keep 1 row by (state, months) group
+
+varroa <- varroa %>% 
+  group_by(state, months) %>% 
+  mutate(diff = stress_pct[year == 2020] - stress_pct[year == 2015]) %>% 
+  slice(1) %>% 
+  select(state, months, diff)
+
 # Clean environment
 
 rm(stressor, selected_years, tuesdata)
