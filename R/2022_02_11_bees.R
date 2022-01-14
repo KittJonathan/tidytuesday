@@ -47,7 +47,7 @@ p <- ggplot(data = colony_loss,
        mapping = aes(x = date, y = rev(state), fill = bin)) +
   geom_tile(colour = "black") +
   labs(x = "", y = "") +
-  ggtitle("Bee colony loss % is U.S. States") +
+  ggtitle("Bee colony loss % in U.S. States") +
   scale_fill_manual(values = c("#FFF1DA", "#FED781", "#FFB800",
                                "#EB7D02", "#C75D00", "#6F3C03"),
                     na.value = "grey90",
