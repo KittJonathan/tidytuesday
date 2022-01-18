@@ -26,12 +26,66 @@ rm(tuesdata)
 
 # Data wrangling ----
 
-head(chocolate)
+# Clean chocolate dataset
 
-# Add a column with id index
-chocolate <- chocolate %>% 
-  dplyr::mutate(id = 1:nrow(chocolate)) %>% 
-  dplyr::select(id, everything())
+chocolate_clean <- chocolate %>% 
+  tibble::add_column(id = 1:nrow(.), .before = 1) %>%   # add an id column
+  dplyr::mutate(company_country = case_when(company_location == "Amsterdam" ~ "Netherlands",
+                                            company_location %in% c("Sao Tome", "Sao Tome & Principe") ~ "Sao Tome and Principe",
+                                            company_location %in% c("Scotland", "U.K.", "Wales") ~ "UK",
+                                            company_location == "St. Lucia" ~ "Saint Lucia",
+                                            company_location == "St.Vincent-Grenadines" ~ "Saint Vincent",
+                                            company_location == "U.A.E." ~ "United Arab Emirates",
+                                            company_location == "U.S.A." ~ "USA",
+                                            TRUE ~ company_location),
+                bean_country = case_when(country_of_bean_origin == "Congo" ~ "Republic of Congo",
+                                         country_of_bean_origin %in% c("Sulawesi", "Sumatra") ~ "Indonesia",
+                                         country_of_bean_origin == "DR Congo" ~ "Democratic Republic of the Congo",
+                                         country_of_bean_origin %in% c("Sao Tome", "Sao Tome & Principe", "Principe") ~ "Sao Tome and Principe",
+                                         country_of_bean_origin == "U.S.A" ~ "USA",
+                                         country_of_bean_origin == "Burma" ~ "Myanmar",
+                                         country_of_bean_origin == "St. Lucia" ~ "Saint Lucia",
+                                         country_of_bean_origin == "St.Vincent-Grenadines" ~ "Saint Vincent",
+                                         TRUE ~ country_of_bean_origin),
+                cocoa_percent = parse_number(cocoa_percent)) %>% 
+  dplyr::select(id, company_manufacturer, company_country, review_date, bean_country,
+                cocoa_percent:rating)
+  
+  dplyr::mutate(cocoa_percent = parse_number(cocoa_percent)) %>%   # extract numeric value
+  dplyr::select(id, company_location, country_of_bean_origin,
+                cocoa_percent:most_memorable_characteristics, review_date, rating)
+  
+# Extract companies and beans countries
+  
+countries <- chocolate_clean %>% 
+  dplyr::select(bean_country, company_country) %>% 
+  dplyr::filter(bean_country != company_country) %>% 
+  dplyr::distinct() %>% 
+  dplyr::arrange(bean_country, company_country)
+
+
+# Extract companies and beans countries
+countries <- chocolate %>% 
+  dplyr::select(company_country = company_location,
+                bean_country = country_of_bean_origin) %>% 
+  dplyr::arrange(company_country, bean_country) %>% 
+  dplyr::mutate(company_country = case_when(company_country == "Amsterdam" ~ "Netherlands",
+                                            company_country %in% c("Sao Tome", "Sao Tome & Principe") ~ "Sao Tome and Principe",
+                                            company_country %in% c("Scotland", "U.K.", "Wales") ~ "UK",
+                                            company_country == "St. Lucia" ~ "Saint Lucia",
+                                            company_country == "St.Vincent-Grenadines" ~ "Saint Vincent",
+                                            company_country == "U.A.E." ~ "United Arab Emirates",
+                                            company_country == "U.S.A." ~ "USA",
+                                            TRUE ~ company_country)) %>% 
+  dplyr::mutate(bean_country = case_when(bean_country == "Congo" ~ "Republic of Congo",
+                                         bean_country %in% c("Sulawesi", "Sumatra") ~ "Indonesia",
+                                         bean_country == "DR Congo" ~ "Democratic Republic of the Congo",
+                                         bean_country %in% c("Sao Tome", "Sao Tome & Principe", "Principe") ~ "Sao Tome and Principe",
+                                         bean_country == "U.S.A" ~ "USA",
+                                         bean_country == "Burma" ~ "Myanmar",
+                                         bean_country == "St. Lucia" ~ "Saint Lucia",
+                                         bean_country == "St.Vincent-Grenadines" ~ "Saint Vincent",
+                                         TRUE ~ bean_country))
 
 # Extract ingredients information
 ingredients <- chocolate %>% 
@@ -55,6 +109,16 @@ ingredients <- chocolate %>%
                                         TRUE ~ ingredients))
 
 head(ingredients)
+
+# World map ----
+
+world <- map_data("world") %>% 
+  filter(region != "Antarctica")
+
+regions <- unique(world$region)
+
+regions_diff <- !unique(countries$company_country) %in% regions
+regions_diff <- unique(countries$company_country)[regions_diff]
 
 # World tile grid map ----
 
