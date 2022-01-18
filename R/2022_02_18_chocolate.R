@@ -9,6 +9,7 @@
 
 # Load packages ----
 
+library(ggwordcloud)
 library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
@@ -74,7 +75,7 @@ producers <- chocolate %>%
 # Ingredients 
 
 unique_ids <- chocolate %>% 
-  dplyr::select(id, cocoa_percent, rating, ingredients)
+  dplyr::select(id, company_country:cocoa_percent, rating, ingredients)
 
 ingredients <- unique_ids %>% 
   dplyr::mutate(nb_ingr = parse_number(ingredients),
@@ -82,7 +83,7 @@ ingredients <- unique_ids %>%
   dplyr::mutate(list_ingr = str_remove(list_ingr, " ")) %>% 
   tidyr::separate(list_ingr, paste0("ingr", 1:7), ",") %>% 
   dplyr::select(-ingredients) %>% 
-  tidyr::pivot_longer(!(c(id, cocoa_percent, rating, nb_ingr)),
+  tidyr::pivot_longer(!(c(id:nb_ingr)),
                         names_to = "ingr_number",
                         values_to = "ingredients",
                         values_drop_na = TRUE) %>% 
@@ -93,8 +94,12 @@ ingredients <- unique_ids %>%
                                         ingredients == "C" ~ "cocoa butter",
                                         ingredients == "V" ~ "vanilla",
                                         ingredients == "L" ~ "lecithin",
-                                        ingredients == "Sa" ~ "Salt",
+                                        ingredients == "Sa" ~ "salt",
                                         TRUE ~ ingredients))
+
+ingr_ratings <- ingredients %>% 
+  dplyr::group_by(nb_ingr) %>% 
+  dplyr::summarise(median_rating = mean(rating))
 
 ingr_ids <- unique(ingredients$id)
 
@@ -108,6 +113,55 @@ ingredients <- rbind(ingredients, missing_ids) %>%
   dplyr::arrange(id)
 
 rm(missing_ids, unique_ids, ingr_ids)
+
+ratings_nb_ingr <- ingredients %>% 
+  dplyr::group_by(nb_ingr) %>% 
+  dplyr::summarise(mean_rating = mean(rating)) %>% 
+  dplyr::filter(!is.na(nb_ingr))
+
+ggplot(data = ratings_nb_ingr) +
+  geom_col(mapping = aes(x = nb_ingr,
+                         y = mean_rating)) +
+  theme_minimal()
+
+ggplot() +
+  geom_smooth(data = ingredients,
+              mapping = aes(x = rating,
+                            y = rating))
+
+# Characteristics
+
+characteristics <- chocolate %>% 
+  dplyr::select(id, company_country:cocoa_percent, rating,
+                characteristics = most_memorable_characteristics) %>% 
+  tidyr::separate(characteristics, paste0("word", 1:5), ",") %>% 
+  tidyr::pivot_longer(!(c(id:rating)),
+                      names_to = "word_number",
+                      values_to = "word",
+                      values_drop_na = TRUE) %>% 
+  dplyr::mutate(word = str_trim(word)) %>% 
+  dplyr::select(id:rating, characteristic = word)
+
+highest_rating_words <- characteristics %>% 
+  dplyr::filter(rating >= 3.0) %>% 
+  dplyr::count(characteristic, sort = T) %>% 
+  dplyr::filter(characteristic != "cocoa") %>% 
+  dplyr::top_n(10) %>% 
+  dplyr::mutate(size = 10:1)
+
+lowest_rating_words <- characteristics %>% 
+  dplyr::filter(rating <= 2) %>% 
+  dplyr::count(characteristic, sort = T) %>% 
+  dplyr::filter(!characteristic %in% c("cocoa", "very bitter")) %>% 
+  dplyr::top_n(10)
+
+ggplot(data = highest_rating_words,
+       mapping = aes(label = characteristic, size = size)) +
+  geom_text_wordcloud(area_corr = TRUE) +
+  scale_size_area(max_size = 40) +
+  theme_minimal() +
+  theme(l = element_text(family = "Poiret"))
+  
 
 # World map of producers ----
 
@@ -160,5 +214,32 @@ ggsave("figs/2022_01_18_chocolate_map.png", map, dpi = 320, width = 12, height =
 
 
 
+
+# Words describing low and high rated bars ----
+
+low_rated <- characteristics %>% 
+  dplyr::filter(rating < median(rating)) %>% 
+  dplyr::count(characteristic, sort = T) %>% 
+  head(10)
+
+high_rated <- characteristics %>% 
+  dplyr::filter(rating > median(rating)) %>% 
+  dplyr::count(characteristic, sort = T) %>% 
+  head(10)
+
+words <- rbind(low_rated, high_rated) %>% 
+  dplyr::select(characteristic) %>% 
+  dplyr::distinct()
+
+ratings <- characteristics %>% 
+  dplyr::filter(characteristic %in% words$characteristic) %>% 
+  dplyr::group_by(characteristic) %>% 
+  dplyr::summarise(min_rating = min(rating),
+                   max_rating = max(rating))
+
+ggplot() +
+  geom_segment(data = ratings,
+               mapping = aes(x = min_rating, xend = max_rating,
+                             y = characteristic, yend = characteristic))
 
 # Save figs ----
