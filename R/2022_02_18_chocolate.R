@@ -42,7 +42,7 @@ chocolate_clean <- chocolate %>%
                                          country_of_bean_origin %in% c("Sulawesi", "Sumatra") ~ "Indonesia",
                                          country_of_bean_origin == "DR Congo" ~ "Democratic Republic of the Congo",
                                          country_of_bean_origin %in% c("Sao Tome", "Sao Tome & Principe", "Principe") ~ "Sao Tome and Principe",
-                                         country_of_bean_origin == "U.S.A" ~ "USA",
+                                         country_of_bean_origin == "U.S.A." ~ "USA",
                                          country_of_bean_origin == "Burma" ~ "Myanmar",
                                          country_of_bean_origin == "St. Lucia" ~ "Saint Lucia",
                                          country_of_bean_origin == "St.Vincent-Grenadines" ~ "Saint Vincent",
