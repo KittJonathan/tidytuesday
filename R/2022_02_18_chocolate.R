@@ -217,27 +217,25 @@ ggsave("figs/2022_01_18_chocolate_map.png", map, dpi = 320, width = 12, height =
 
 # Words describing low and high rated bars ----
 
-low_rated <- characteristics %>% 
-  dplyr::filter(rating < median(rating)) %>% 
+word_count <- characteristics %>% 
   dplyr::count(characteristic, sort = T) %>% 
-  head(10)
+  dplyr::filter(n > 100)
 
-high_rated <- characteristics %>% 
-  dplyr::filter(rating > median(rating)) %>% 
-  dplyr::count(characteristic, sort = T) %>% 
-  head(10)
+word_levels <- word_count$characteristic
 
-words <- rbind(low_rated, high_rated) %>% 
-  dplyr::select(characteristic) %>% 
-  dplyr::distinct()
-
-ratings <- characteristics %>% 
-  dplyr::filter(characteristic %in% words$characteristic) %>% 
+word_ratings <- characteristics %>% 
+  dplyr::filter(characteristic %in% word_count$characteristic) %>% 
   dplyr::group_by(characteristic) %>% 
   dplyr::summarise(min_rating = min(rating),
-                   max_rating = max(rating))
+                   max_rating = max(rating)) %>% 
+  dplyr::mutate(characteristic = factor(characteristic,
+                                        levels = word_levels))
 
 ggplot() +
+  geom_segment(data = word_ratings,
+               mapping = aes(x = min_rating, xend = max_rating,
+                             y = characteristic, yend = characteristic))
+
   geom_segment(data = ratings,
                mapping = aes(x = min_rating, xend = max_rating,
                              y = characteristic, yend = characteristic))
