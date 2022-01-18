@@ -51,11 +51,7 @@ chocolate <- chocolate %>%
                 cocoa_percent = parse_number(cocoa_percent)) %>% 
   dplyr::select(id, company_manufacturer, company_country, review_date, bean_country,
                 cocoa_percent:rating)
-  
-  dplyr::mutate(cocoa_percent = parse_number(cocoa_percent)) %>%   # extract numeric value
-  dplyr::select(id, company_location, country_of_bean_origin,
-                cocoa_percent:most_memorable_characteristics, review_date, rating)
-  
+
 # Producers
   
 producers <- chocolate %>% 
@@ -74,6 +70,44 @@ producers <- chocolate %>%
     dplyr::mutate(bin = factor(bin,
                                levels = c("NA", "< 5", "5-9", "10-14",
                                           "15-19", "20-24", "25 +")))
+
+# Ingredients 
+
+unique_ids <- chocolate %>% 
+  dplyr::select(id, cocoa_percent, rating, ingredients)
+
+ingredients <- unique_ids %>% 
+  dplyr::mutate(nb_ingr = parse_number(ingredients),
+                list_ingr = str_remove(ingredients, "[0-9]-")) %>% 
+  dplyr::mutate(list_ingr = str_remove(list_ingr, " ")) %>% 
+  tidyr::separate(list_ingr, paste0("ingr", 1:7), ",") %>% 
+  dplyr::select(-ingredients) %>% 
+  tidyr::pivot_longer(!(c(id, cocoa_percent, rating, nb_ingr)),
+                        names_to = "ingr_number",
+                        values_to = "ingredients",
+                        values_drop_na = TRUE) %>% 
+  dplyr::select(-ingr_number) %>% 
+  dplyr::mutate(ingredients = case_when(ingredients == "B" ~ "beans",
+                                        ingredients == "S" ~ "sugar",
+                                        ingredients == "S*" ~ "sweetener",
+                                        ingredients == "C" ~ "cocoa butter",
+                                        ingredients == "V" ~ "vanilla",
+                                        ingredients == "L" ~ "lecithin",
+                                        ingredients == "Sa" ~ "Salt",
+                                        TRUE ~ ingredients))
+
+ingr_ids <- unique(ingredients$id)
+
+missing_ids <- unique_ids %>% 
+  dplyr::filter(!id %in% ingr_ids) %>% 
+  dplyr::mutate(nb_ingr = NA,
+                ingredients = NA) %>% 
+  dplyr::select(id:rating, nb_ingr, ingredients)
+
+ingredients <- rbind(ingredients, missing_ids) %>% 
+  dplyr::arrange(id)
+
+rm(missing_ids, unique_ids, ingr_ids)
 
 # World map of producers ----
 
@@ -125,27 +159,6 @@ ggsave("figs/2022_01_18_chocolate_map.png", map, dpi = 320, width = 12, height =
 
 
 
-# Extract ingredients information
-ingredients <- chocolate %>% 
-  dplyr::select(id, ingredients) %>% 
-  dplyr::mutate(nb_ingredients = parse_number(ingredients),
-                list_ingredients = str_remove(ingredients, "[0-9]-")) %>% 
-  tidyr::separate(list_ingredients, paste0("ingr", 1:7), ",") %>% 
-  dplyr::select(-ingredients) %>% 
-  tidyr::pivot_longer(!c(id, nb_ingredients),
-                      names_to = "ingredients",
-                      values_drop_na = TRUE) %>% 
-  dplyr::select(id, nb_ingredients, ingredients = value) %>% 
-  dplyr::mutate(ingredients = str_remove(ingredients, " ")) %>% 
-  dplyr::mutate(ingredients = case_when(ingredients == "B" ~ "beans",
-                                        ingredients == "S" ~ "sugar",
-                                        ingredients == "S*" ~ "sweetener",
-                                        ingredients == "C" ~ "cocoa_butter",
-                                        ingredients == "V" ~ "vanilla",
-                                        ingredients == "L" ~ "lecithin",
-                                        ingredients == "Sa" ~ "Salt",
-                                        TRUE ~ ingredients))
 
-head(ingredients)
 
 # Save figs ----
