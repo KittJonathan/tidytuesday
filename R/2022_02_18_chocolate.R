@@ -9,14 +9,15 @@
 
 # Load packages ----
 
+library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
-#library(showtext)
+
 
 # Import fonts ----
 
-#font_add_google("Poiret One", "Poiret")
-#showtext_auto()
+font_add_google("Poiret One", "Poiret")
+showtext_auto()
 
 # Import dataset ----
 
@@ -28,7 +29,7 @@ rm(tuesdata)
 
 # Clean chocolate dataset
 
-chocolate_clean <- chocolate %>% 
+chocolate <- chocolate %>% 
   tibble::add_column(id = 1:nrow(.), .before = 1) %>%   # add an id column
   dplyr::mutate(company_country = case_when(company_location == "Amsterdam" ~ "Netherlands",
                                             company_location %in% c("Sao Tome", "Sao Tome & Principe") ~ "Sao Tome and Principe",
@@ -55,37 +56,74 @@ chocolate_clean <- chocolate %>%
   dplyr::select(id, company_location, country_of_bean_origin,
                 cocoa_percent:most_memorable_characteristics, review_date, rating)
   
-# Extract companies and beans countries
+# Producers
   
-countries <- chocolate_clean %>% 
-  dplyr::select(bean_country, company_country) %>% 
-  dplyr::filter(bean_country != company_country) %>% 
-  dplyr::distinct() %>% 
-  dplyr::arrange(bean_country, company_country)
+producers <- chocolate %>% 
+    dplyr::select(bean_country, company_country) %>% 
+    dplyr::distinct() %>% 
+    dplyr::group_by(bean_country) %>% 
+    dplyr::count(sort = TRUE) %>% 
+    dplyr::mutate(bin = case_when(n < 5 ~ "< 5",
+                                  n >= 5 & n < 10 ~ "5-9",
+                                  n >= 10 & n < 15 ~ "10-14",
+                                  n >= 15 & n < 20 ~ "15-19",
+                                  n >= 20 & n < 25 ~ "20-24",
+                                  n >= 25 ~ "25 +")) %>%
+    dplyr::select(region = bean_country, bin) %>% 
+    dplyr::filter(region != "Blend") %>% 
+    dplyr::mutate(bin = factor(bin,
+                               levels = c("NA", "< 5", "5-9", "10-14",
+                                          "15-19", "20-24", "25 +")))
+
+# World map of producers ----
+
+world <- map_data("world") %>% 
+  dplyr::filter(region != "Antarctica") %>% 
+  dplyr::left_join(producers)
+
+labels <- tibble(region = c("Dominican Republic", "Ecuador", "Madagascar", "Peru", "Venezuela"),
+                 x = c(-50, -95, 72, -85, -42),
+                 y = c(23, -2, -18, -14, 9))
+
+map <- ggplot() +
+  geom_polygon(data = world,
+               mapping = aes(x = long,
+                             y = lat,
+                             group = group,
+                             fill = bin),
+               colour = "grey80") +
+  coord_fixed(1.3) +
+  geom_text(data = labels, 
+            mapping = aes(x = x, 
+                          y = y,
+                          label = region),
+            family = "Poiret", colour = "black", size = 15) +
+  scale_fill_manual(values = c("#faf8ec", "#c28954", "#8f5431",
+                               "#603217", "#420c00", "#120a08"),
+                    na.value = "#b39f80", na.translate = FALSE,
+                    guide = guide_legend(nrow = 1, margin = margin(0, 0, 30, 0))) +
+  ggtitle(label = "Top exporters of cocoa beans",
+          subtitle = "colour indicates number of destination countries") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "#b39f80", colour = NA),
+        plot.background = element_rect(fill = "#b39f80"),
+        plot.title = element_text(family = "Poiret", hjust = 0.5,
+                                  colour = "white", size = 60,
+                                  margin = margin(10, 0, 0, 0)),
+        plot.subtitle = element_text(family = "Poiret", hjust = 0.5,
+                                     colour = "white", size = 50),
+        legend.title = element_blank(),
+        legend.text = element_text(family = "Poiret", colour = "black",
+                                   size = 35, margin = margin(l = -0.6, unit = "cm")),
+        legend.spacing.x = unit(0.75, "cm"),
+        legend.position = "bottom")
+
+ggsave("figs/2022_01_18_chocolate_map.png", map, dpi = 320, width = 12, height = 6)
 
 
-# Extract companies and beans countries
-countries <- chocolate %>% 
-  dplyr::select(company_country = company_location,
-                bean_country = country_of_bean_origin) %>% 
-  dplyr::arrange(company_country, bean_country) %>% 
-  dplyr::mutate(company_country = case_when(company_country == "Amsterdam" ~ "Netherlands",
-                                            company_country %in% c("Sao Tome", "Sao Tome & Principe") ~ "Sao Tome and Principe",
-                                            company_country %in% c("Scotland", "U.K.", "Wales") ~ "UK",
-                                            company_country == "St. Lucia" ~ "Saint Lucia",
-                                            company_country == "St.Vincent-Grenadines" ~ "Saint Vincent",
-                                            company_country == "U.A.E." ~ "United Arab Emirates",
-                                            company_country == "U.S.A." ~ "USA",
-                                            TRUE ~ company_country)) %>% 
-  dplyr::mutate(bean_country = case_when(bean_country == "Congo" ~ "Republic of Congo",
-                                         bean_country %in% c("Sulawesi", "Sumatra") ~ "Indonesia",
-                                         bean_country == "DR Congo" ~ "Democratic Republic of the Congo",
-                                         bean_country %in% c("Sao Tome", "Sao Tome & Principe", "Principe") ~ "Sao Tome and Principe",
-                                         bean_country == "U.S.A" ~ "USA",
-                                         bean_country == "Burma" ~ "Myanmar",
-                                         bean_country == "St. Lucia" ~ "Saint Lucia",
-                                         bean_country == "St.Vincent-Grenadines" ~ "Saint Vincent",
-                                         TRUE ~ bean_country))
 
 # Extract ingredients information
 ingredients <- chocolate %>% 
@@ -110,49 +148,4 @@ ingredients <- chocolate %>%
 
 head(ingredients)
 
-# World map ----
-
-world <- map_data("world") %>% 
-  filter(region != "Antarctica")
-
-regions <- unique(world$region)
-
-regions_diff <- !unique(countries$company_country) %in% regions
-regions_diff <- unique(countries$company_country)[regions_diff]
-
-# World tile grid map ----
-
-world_tile_grid <- read_csv("data/worldtilegrid.csv")
-
-ggplot() +
-  geom_rect(data = world_tile_grid,
-            mapping = aes(xmin = x, xmax = x + 1,
-                          ymin = y, ymax = y + 1,
-                          fill = region),
-            colour = "white") +
-  geom_text(data = world_tile_grid,
-            mapping = aes(x = x,
-                          y = y,
-                          label = alpha.2),
-            colour = "white",
-            alpha = 0.5,
-            nudge_x = 0.5,
-            nudge_y = -0.5,
-            size = 3) +
-  scale_x_continuous(breaks = seq(1, 29, 1)) +
-  #scale_y_continuous(breaks = seq(1, 24, 1)) +
-  scale_y_reverse(breaks = seq(1, 24, 1)) +
-  theme_minimal() +
-  theme(axis.text = element_blank(),
-        axis.title = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_line(colour = "black"))
-
-ggplot(data = world_tile_grid,
-       mapping = aes(x = x,
-                     y = y)) +
-  geom_text(mapping = aes(label = alpha.2))
-
-
 # Save figs ----
-ggsave("figs/2022_01_11_bees.png", p, dpi = 320, width = 12, height = 6) 
