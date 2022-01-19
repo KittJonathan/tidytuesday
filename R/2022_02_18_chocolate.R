@@ -10,6 +10,7 @@
 # Load packages ----
 
 #library(ggwordcloud)
+library(patchwork)
 library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
@@ -186,9 +187,6 @@ rm(labels, world)
 ggsave("figs/2022_01_18_chocolate_map.png", map, dpi = 320, width = 12, height = 6)
 
 
-
-
-
 # Ratings by description words ----
 
 word_count <- characteristics %>% 
@@ -209,9 +207,8 @@ word_ratings <- characteristics %>%
   dplyr::arrange(word) %>% 
   tibble::add_column(id = nrow(.):1, .before = 1)
 
-add_column(id = 1:nrow(.), .before = 1)
 
-ggplot() +
+review_words <- ggplot() +
   geom_segment(data = word_ratings,
                mapping = aes(x = min_rating, xend = max_rating,
                              y = word, yend = word),
@@ -227,6 +224,9 @@ ggplot() +
                mapping = aes(x = mean_rating, xend = mean_rating,
                              y = id - 0.2, yend = id + 0.2),
                size = 1, colour = "#603217") +
+  annotate("text", x = 2, y = 12.5, label = "min", size = 12, family = "Poiret", hjust = 0.5, colour = "black") +
+  annotate("text", x = 3.05, y = 12.5, label = "mean", size = 12, family = "Poiret", hjust = 0.5, colour = "black") +
+  annotate("text", x = 4, y = 12.5, label = "max", size = 12, family = "Poiret", hjust = 0.5, colour = "black") +
   ggtitle(label = "Ratings for words most used in chocolate bars reviews ",
           subtitle = "words shown are present in at least 100 reviews") +
   theme_minimal() +
@@ -237,31 +237,18 @@ ggplot() +
         panel.background = element_rect(fill = "#b39f80", colour = NA),
         plot.background = element_rect(fill = "#b39f80", colour = NA),
         plot.title = element_text(family = "Poiret", hjust = 0.5,
-                                  colour = "white", size = 50,
+                                  colour = "white", size = 60,
                                   margin = margin(10, 0, 0, 0)),
         plot.subtitle = element_text(family = "Poiret", hjust = 0.5,
-                                     colour = "white", size = 30,
-                                     margin = margin(5, 0, 10, 0)),
+                                     colour = "white", size = 50,
+                                     margin = margin(5, 0, 30, 0)),
         axis.text.x = element_text(family = "Poiret", colour = "white",
-                                   size = 15),
+                                   size = 30),
         axis.text.y = element_text(family = "Poiret", colour = "white",
-                                   size = 20))
+                                   size = 45, hjust = 1))
 
-theme(panel.grid = element_blank(),
-      axis.title = element_blank(),
-      axis.text = element_blank(),
-      panel.background = element_rect(fill = "#b39f80", colour = NA),
-      plot.background = element_rect(fill = "#b39f80", colour = NA),
-      plot.title = element_text(family = "Poiret", hjust = 0.5,
-                                colour = "white", size = 60,
-                                margin = margin(10, 0, 0, 0)),
-      plot.subtitle = element_text(family = "Poiret", hjust = 0.5,
-                                   colour = "white", size = 50),
-      legend.title = element_blank(),
-      legend.text = element_text(family = "Poiret", colour = "black",
-                                 size = 35, margin = margin(l = -0.6, unit = "cm")),
-      legend.spacing.x = unit(0.75, "cm"),
-      legend.position = "bottom")
+ggsave("figs/2022_01_18_chocolate_words.png", review_words, dpi = 320, width = 12, height = 6)
+
 
 
 
