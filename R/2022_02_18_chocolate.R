@@ -3,18 +3,11 @@
 # Chocolate bars
 # https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-01-18/readme.md
 
-# Links ----
-
-# https://www.maartenlambrechts.com/2017/10/22/tutorial-a-worldtilegrid-with-ggplot2.html
-
 # Load packages ----
 
-#library(ggwordcloud)
-library(patchwork)
 library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
-
 
 # Import fonts ----
 
@@ -73,48 +66,6 @@ producers <- chocolate %>%
                                levels = c("NA", "< 5", "5-9", "10-14",
                                           "15-19", "20-24", "25 +")))
 
-# Ingredients 
-
-unique_ids <- chocolate %>% 
-  dplyr::select(id, company_country:cocoa_percent, rating, ingredients)
-
-ingredients <- unique_ids %>% 
-  dplyr::mutate(nb_ingr = parse_number(ingredients),
-                list_ingr = str_remove(ingredients, "[0-9]-")) %>% 
-  dplyr::mutate(list_ingr = str_remove(list_ingr, " ")) %>% 
-  tidyr::separate(list_ingr, paste0("ingr", 1:7), ",") %>% 
-  dplyr::select(-ingredients) %>% 
-  tidyr::pivot_longer(!(c(id:nb_ingr)),
-                        names_to = "ingr_number",
-                        values_to = "ingredients",
-                        values_drop_na = TRUE) %>% 
-  dplyr::select(-ingr_number) %>% 
-  dplyr::mutate(ingredients = case_when(ingredients == "B" ~ "beans",
-                                        ingredients == "S" ~ "sugar",
-                                        ingredients == "S*" ~ "sweetener",
-                                        ingredients == "C" ~ "cocoa butter",
-                                        ingredients == "V" ~ "vanilla",
-                                        ingredients == "L" ~ "lecithin",
-                                        ingredients == "Sa" ~ "salt",
-                                        TRUE ~ ingredients))
-
-ingr_ratings <- ingredients %>% 
-  dplyr::group_by(nb_ingr) %>% 
-  dplyr::summarise(median_rating = mean(rating))
-
-ingr_ids <- unique(ingredients$id)
-
-missing_ids <- unique_ids %>% 
-  dplyr::filter(!id %in% ingr_ids) %>% 
-  dplyr::mutate(nb_ingr = NA,
-                ingredients = NA) %>% 
-  dplyr::select(id:rating, nb_ingr, ingredients)
-
-ingredients <- rbind(ingredients, missing_ids) %>% 
-  dplyr::arrange(id)
-
-rm(missing_ids, unique_ids, ingr_ids)
-
 # Characteristics
 
 characteristics <- chocolate %>% 
@@ -137,10 +88,6 @@ world <- map_data("world") %>%
 labels <- tibble(id = 1:5,
                  x = c(50, -80, -85, -58, -66),
                  y = c(-26, -14, -2, 10, 22))
-
-labels <- tibble(region = c("Dominican Republic", "Ecuador", "Madagascar", "Peru", "Venezuela"),
-                 x = c(-50, -95, 70, -85, -42),
-                 y = c(23, -2, -26, -14, 9))
 
 map <- ggplot() +
   geom_polygon(data = world,
@@ -249,8 +196,6 @@ review_words <- ggplot() +
 
 ggsave("figs/2022_01_18_chocolate_words.png", review_words, dpi = 320, width = 12, height = 6)
 
+# Clean global environment ----
 
-
-
-
-# Save figs ----
+rm(characteristics, chocolate, map, producers, review_words)
