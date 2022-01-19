@@ -118,6 +118,7 @@ map <- ggplot() +
         axis.title = element_blank(),
         axis.text = element_blank(),
         panel.background = element_rect(fill = "#b39f80", colour = NA),
+        plot.background = element_rect(fill = "#b39f80", colour = NA),
         plot.title = element_text(family = "Poiret", hjust = 0.5,
                                   colour = "white", size = 60,
                                   margin = margin(10, 0, 0, 0)),
