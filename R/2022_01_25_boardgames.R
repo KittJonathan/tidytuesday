@@ -158,141 +158,51 @@ games <- details %>%
 rm(count_categories, count_mechanics,
    details, ratings)
 
-  
+# Minimal age by number of mechanics ----
 
-# Clean chocolate dataset
+d1 <- games %>% 
+  select(id, name, min_age, nb_mechanics) %>% 
+  filter(!is.na(nb_mechanics)) %>% 
+  group_by(nb_mechanics) %>% 
+  summarise(mean = mean(min_age))
 
-chocolate <- chocolate %>% 
-  tibble::add_column(id = 1:nrow(.), .before = 1) %>%   # add an id column
-  dplyr::mutate(company_country = case_when(company_location == "Amsterdam" ~ "Netherlands",
-                                            company_location %in% c("Sao Tome", "Sao Tome & Principe") ~ "Sao Tome and Principe",
-                                            company_location %in% c("Scotland", "U.K.", "Wales") ~ "UK",
-                                            company_location == "St. Lucia" ~ "Saint Lucia",
-                                            company_location == "St.Vincent-Grenadines" ~ "Saint Vincent",
-                                            company_location == "U.A.E." ~ "United Arab Emirates",
-                                            company_location == "U.S.A." ~ "USA",
-                                            TRUE ~ company_location),
-                bean_country = case_when(country_of_bean_origin == "Congo" ~ "Republic of Congo",
-                                         country_of_bean_origin %in% c("Sulawesi", "Sumatra") ~ "Indonesia",
-                                         country_of_bean_origin == "DR Congo" ~ "Democratic Republic of the Congo",
-                                         country_of_bean_origin %in% c("Sao Tome", "Sao Tome & Principe", "Principe") ~ "Sao Tome and Principe",
-                                         country_of_bean_origin == "U.S.A." ~ "USA",
-                                         country_of_bean_origin == "Burma" ~ "Myanmar",
-                                         country_of_bean_origin == "St. Lucia" ~ "Saint Lucia",
-                                         country_of_bean_origin == "St.Vincent-Grenadines" ~ "Saint Vincent",
-                                         TRUE ~ country_of_bean_origin),
-                cocoa_percent = parse_number(cocoa_percent)) %>% 
-  dplyr::select(id, company_manufacturer, company_country, review_date, bean_country,
-                cocoa_percent:rating)
-
-# Producers
-  
-producers <- chocolate %>% 
-    dplyr::select(bean_country, company_country) %>% 
-    dplyr::distinct() %>% 
-    dplyr::group_by(bean_country) %>% 
-    dplyr::count(sort = TRUE) %>% 
-    dplyr::mutate(bin = case_when(n < 5 ~ "< 5",
-                                  n >= 5 & n < 10 ~ "5-9",
-                                  n >= 10 & n < 15 ~ "10-14",
-                                  n >= 15 & n < 20 ~ "15-19",
-                                  n >= 20 & n < 25 ~ "20-24",
-                                  n >= 25 ~ "25 +")) %>%
-    dplyr::select(region = bean_country, bin) %>% 
-    dplyr::filter(region != "Blend") %>% 
-    dplyr::mutate(bin = factor(bin,
-                               levels = c("NA", "< 5", "5-9", "10-14",
-                                          "15-19", "20-24", "25 +")))
-
-# Ingredients 
-
-unique_ids <- chocolate %>% 
-  dplyr::select(id, company_country:cocoa_percent, rating, ingredients)
-
-ingredients <- unique_ids %>% 
-  dplyr::mutate(nb_ingr = parse_number(ingredients),
-                list_ingr = str_remove(ingredients, "[0-9]-")) %>% 
-  dplyr::mutate(list_ingr = str_remove(list_ingr, " ")) %>% 
-  tidyr::separate(list_ingr, paste0("ingr", 1:7), ",") %>% 
-  dplyr::select(-ingredients) %>% 
-  tidyr::pivot_longer(!(c(id:nb_ingr)),
-                        names_to = "ingr_number",
-                        values_to = "ingredients",
-                        values_drop_na = TRUE) %>% 
-  dplyr::select(-ingr_number) %>% 
-  dplyr::mutate(ingredients = case_when(ingredients == "B" ~ "beans",
-                                        ingredients == "S" ~ "sugar",
-                                        ingredients == "S*" ~ "sweetener",
-                                        ingredients == "C" ~ "cocoa butter",
-                                        ingredients == "V" ~ "vanilla",
-                                        ingredients == "L" ~ "lecithin",
-                                        ingredients == "Sa" ~ "salt",
-                                        TRUE ~ ingredients))
-
-ingr_ratings <- ingredients %>% 
-  dplyr::group_by(nb_ingr) %>% 
-  dplyr::summarise(median_rating = mean(rating))
-
-ingr_ids <- unique(ingredients$id)
-
-missing_ids <- unique_ids %>% 
-  dplyr::filter(!id %in% ingr_ids) %>% 
-  dplyr::mutate(nb_ingr = NA,
-                ingredients = NA) %>% 
-  dplyr::select(id:rating, nb_ingr, ingredients)
-
-ingredients <- rbind(ingredients, missing_ids) %>% 
-  dplyr::arrange(id)
-
-rm(missing_ids, unique_ids, ingr_ids)
-
-ratings_nb_ingr <- ingredients %>% 
-  dplyr::group_by(nb_ingr) %>% 
-  dplyr::summarise(mean_rating = mean(rating)) %>% 
-  dplyr::filter(!is.na(nb_ingr))
-
-ggplot(data = ratings_nb_ingr) +
-  geom_col(mapping = aes(x = nb_ingr,
-                         y = mean_rating)) +
-  theme_minimal()
-
-ggplot() +
-  geom_smooth(data = ingredients,
-              mapping = aes(x = rating,
-                            y = rating))
-
-# Characteristics
-
-characteristics <- chocolate %>% 
-  dplyr::select(id, company_country:cocoa_percent, rating,
-                characteristics = most_memorable_characteristics) %>% 
-  tidyr::separate(characteristics, paste0("word", 1:5), ",") %>% 
-  tidyr::pivot_longer(!(c(id:rating)),
-                      names_to = "word_number",
-                      values_to = "word",
-                      values_drop_na = TRUE) %>% 
-  dplyr::mutate(word = str_trim(word)) %>% 
-  dplyr::select(id:rating, characteristic = word)
-
-highest_rating_words <- characteristics %>% 
-  dplyr::filter(rating >= 3.0) %>% 
-  dplyr::count(characteristic, sort = T) %>% 
-  dplyr::filter(characteristic != "cocoa") %>% 
-  dplyr::top_n(10) %>% 
-  dplyr::mutate(size = 10:1)
-
-lowest_rating_words <- characteristics %>% 
-  dplyr::filter(rating <= 2) %>% 
-  dplyr::count(characteristic, sort = T) %>% 
-  dplyr::filter(!characteristic %in% c("cocoa", "very bitter")) %>% 
-  dplyr::top_n(10)
-
-ggplot(data = highest_rating_words,
-       mapping = aes(label = characteristic, size = size)) +
-  geom_text_wordcloud(area_corr = TRUE) +
-  scale_size_area(max_size = 40) +
+ggplot(d1, aes(x = nb_mechanics, y = mean)) +
+  geom_smooth(se = FALSE, size = 3, colour = "#004868") +
+  ggtitle("Does the number of mechanics in a game influence its minimum age ?") +
+  labs(x = "Number of mechanics", y = "Average minimum age") +
+  xlim(c(1, 22)) +
   theme_minimal() +
-  theme(l = element_text(family = "Poiret"))
+  theme(axis.title.x = element_text(colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(colour = "white", size = 20),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(colour = "grey30"),
+        plot.title = element_text(colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.background = element_rect(fill = "#292929", colour = NA),
+        panel.background = element_rect(fill = "#292929", colour = NA))
+
+%>% 
+  mutate(bin = case_when(nb_mechanics < 5 ~ "1-4",
+                         nb_mechanics >= 5 & nb_mechanics < 10 ~ "5-9",
+                         nb_mechanics >= 10 & nb_mechanics < 15 ~ "10-14",
+                         nb_mechanics >= 15 & nb_mechanics < 20 ~ "15-19",
+                         nb_mechanics >= 20 ~ "20+")) %>% 
+  mutate(bin = factor(bin, levels = c("1-4", "5-9", "10-14", "15-19", "20+")))
+
+ggplot(data = d1, aes(x = bin, y = min_age)) +
+  geom_jitter(size = 2, alpha = 0.25, width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size = 5)
+
+  geom_boxplot(colour = "gray60", outlier.alpha = 0)
+  
+  #geom_point(size = 3, alpha = 0.15) +
+  ggtitle("Does the number of mechanics of a game influence its minimum age ?") +
+  labs(x = "Number of mechanics", y = "Minimum age") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 10),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank())
   
 
 # World map of producers ----
