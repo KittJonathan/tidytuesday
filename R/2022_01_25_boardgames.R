@@ -25,10 +25,12 @@ rm(tuesdata)
 # Data wrangling ----
 
 # Clean details dataset : 
+# 1) keep games published from 1950 onwards
 # 1) count number of expansions per game
 # 2) select columns
 
 details <- details %>% 
+  filter(yearpublished >= 1950) %>% 
   mutate(nb_expansions = ifelse(is.na(boardgameexpansion), 0,
                                 lengths(str_split(boardgameexpansion, ",")))) %>% 
   select(id, name = primary, year = yearpublished, owned, nb_expansions,
@@ -41,7 +43,8 @@ details <- details %>%
 # Clean ratings dataset : select columns
 
 ratings <- ratings %>% 
-  select(id:users_rated, thumbnail)
+  filter(id %in% details$id) %>% 
+  select(id, rank:users_rated, thumbnail)
 
 # Create categories dataset :
 # 1) remove games w/o category
@@ -106,6 +109,54 @@ designers <- details %>%
   mutate(designer = parse_character(designer, trim_ws = TRUE)) %>% 
   mutate(designer = str_sub(designer, 2, -2)) %>% 
   filter(designer != "(Uncredited)")
+
+# Create artists dataset :
+# 1) remove games w/o artist
+# 2) select columns
+# 3) remove "[" and "]" from strings
+# 4) count number of artists per game
+# 5) split artists into separate columns
+# 6) transform into long format using pivot_longer
+
+artists <- details %>% 
+  filter(!is.na(artist)) %>% 
+  select(id, artist) %>% 
+  mutate(artist = str_sub(artist, 2, -2)) %>% 
+  mutate(nb_artists = ifelse(is.na(artist), 0,
+                               lengths(str_split(artist, ",")))) %>% 
+  separate(artist, paste0("designer", 1:max(.$nb_artists)), ",") %>% 
+  select(-nb_artists) %>% 
+  pivot_longer(!id, names_to = "artist", values_drop_na = TRUE) %>% 
+  select(id, artist = value) %>% 
+  mutate(artist = parse_character(artist, trim_ws = TRUE)) %>% 
+  mutate(artist = str_sub(artist, 2, -2)) %>% 
+  filter(artist != "(Uncredited)")
+
+# Finish cleaning details dataset :
+# 1) count number of categories, mechanics, designers & artists for each game
+# 1) remove category, mechanic, designer & artist columns
+# 2) add columns with counts for each of the removed columns
+
+count_categories <- categories %>% 
+  count(id) %>% 
+  select(id, nb_categories = n)
+
+count_mechanics <- mechanics %>% 
+  count(id) %>% 
+  select(id, nb_mechanics = n)
+
+details <- details %>% 
+  select(id:min_age) %>% 
+  left_join(count_categories) %>% 
+  left_join(count_mechanics)
+
+# Join details and ratings
+games <- details %>% 
+  left_join(ratings)
+
+# Clear global environment
+rm(count_categories, count_mechanics,
+   details, ratings)
 
   
 
