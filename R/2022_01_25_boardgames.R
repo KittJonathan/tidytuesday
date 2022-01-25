@@ -5,6 +5,7 @@
 
 # Load packages ----
 
+library(patchwork)
 #library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
@@ -158,7 +159,7 @@ games <- details %>%
 rm(count_categories, count_mechanics,
    details, ratings)
 
-# Minimal age by number of mechanics ----
+# Does the number of mechanics in a game influence its minimum age ? ----
 
 d1 <- games %>% 
   select(id, name, min_age, nb_mechanics) %>% 
@@ -166,7 +167,7 @@ d1 <- games %>%
   group_by(nb_mechanics) %>% 
   summarise(mean = mean(min_age))
 
-ggplot(d1, aes(x = nb_mechanics, y = mean)) +
+p1 <- ggplot(d1, aes(x = nb_mechanics, y = mean)) +
   geom_smooth(se = FALSE, size = 3, colour = "#004868") +
   ggtitle("Does the number of mechanics in a game influence its minimum age ?") +
   labs(x = "Number of mechanics", y = "Average minimum age") +
@@ -181,29 +182,57 @@ ggplot(d1, aes(x = nb_mechanics, y = mean)) +
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
 
-%>% 
-  mutate(bin = case_when(nb_mechanics < 5 ~ "1-4",
-                         nb_mechanics >= 5 & nb_mechanics < 10 ~ "5-9",
-                         nb_mechanics >= 10 & nb_mechanics < 15 ~ "10-14",
-                         nb_mechanics >= 15 & nb_mechanics < 20 ~ "15-19",
-                         nb_mechanics >= 20 ~ "20+")) %>% 
-  mutate(bin = factor(bin, levels = c("1-4", "5-9", "10-14", "15-19", "20+")))
 
-ggplot(data = d1, aes(x = bin, y = min_age)) +
-  geom_jitter(size = 2, alpha = 0.25, width = 0.2) +
-  stat_summary(fun = mean, geom = "point", size = 5)
+# Does the play time influence a game's ratings ? ----
 
-  geom_boxplot(colour = "gray60", outlier.alpha = 0)
-  
-  #geom_point(size = 3, alpha = 0.15) +
-  ggtitle("Does the number of mechanics of a game influence its minimum age ?") +
-  labs(x = "Number of mechanics", y = "Minimum age") +
+d2 <- games %>% 
+  select(id, name, playing_time, average, bayes_average) %>% 
+  group_by(playing_time) %>% 
+  summarise(mean = mean(average)) %>% 
+  filter(playing_time <= 300)
+
+
+p2 <- ggplot(d2, aes(x = playing_time / 60, y = mean)) +
+  geom_smooth(se = FALSE, size = 3, colour = "#077643") +
+  ggtitle("Does the playing time of a game influence its ratings ?") +
+  labs(x = "Playing time (in hours)", y = "Average ratings") +
   theme_minimal() +
-  theme(axis.title = element_text(size = 16),
-        axis.text = element_text(size = 10),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_blank())
+  theme(axis.title.x = element_text(colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(colour = "white", size = 20),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(colour = "grey30"),
+        plot.title = element_text(colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.background = element_rect(fill = "#292929", colour = NA),
+        panel.background = element_rect(fill = "#292929", colour = NA))
   
+  
+# How many games published each year ? ----
+
+d3 <- games %>%
+  count(year) %>% 
+  filter(year <= 2021)
+
+p3 <- ggplot(d3, aes(x = year, y = n)) +
+  geom_point(colour = "#c481aa", size = 4) +
+  geom_line(colour = "#c481aa") +
+  ggtitle("Board games published by year") +
+  labs(x = "Year", y = "Number of games") +
+  theme_minimal() +
+  theme(axis.title.x = element_text(colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(colour = "white", size = 20),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(colour = "grey30"),
+        plot.title = element_text(colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.background = element_rect(fill = "#292929", colour = NA),
+        panel.background = element_rect(fill = "#292929", colour = NA))
+
+p1 + p2
+
+(p1 |  p2) / (p3 | p3)
+
+(p1 +  p2) / (p3 + p3)
 
 # World map of producers ----
 
