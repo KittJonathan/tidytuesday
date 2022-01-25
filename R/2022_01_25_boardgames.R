@@ -24,24 +24,46 @@ rm(tuesdata)
 
 # Data wrangling ----
 
-# Explore data
+# Clean details dataset : 
+# 1) count number of expansions per game
+# 2) select columns
 
-expansions <- str_split(details$boardgameexpansion, ",")
+details <- details %>% 
+  mutate(nb_expansions = ifelse(is.na(boardgameexpansion), 0,
+                                lengths(str_split(boardgameexpansion, ",")))) %>% 
+  select(id, name = primary, year = yearpublished, owned, nb_expansions,
+         min_players = minplayers, max_players = maxplayers, playing_time = playingtime,
+         min_play_time = minplaytime, max_play_time = maxplaytime,
+         min_age = minage, category = boardgamecategory,
+         mechanic = boardgamemechanic,
+         designer = boardgamedesigner, artist = boardgameartist)
 
-df<-data.frame(x=runif(24),value=rep(c("B","C;D",NA,"CG;M;Bac","GCP;Coag+","GCP;CNS"),each=4))
-count <- df %>% 
-  rowwise() %>% 
-  mutate(count = sum(!is.na(unlist(str_split(value, ";")))))
+# Clean ratings dataset : select columns
 
+ratings <- ratings %>% 
+  select(id:users_rated, thumbnail)
 
-glimpse(details)
-glimpse(ratings)
+# Create categories dataset :
+# 1) remove games w/o category
+# 2) select columns
+# 3) remove "[" and "]" from strings
+# 4) count number of categories per game
+# 5) split categories into separate columns
+# 6) transform into long format using pivot_longer
 
-expansions <- details %>% 
-  select(num:primary, boardgameexpansion) %>% 
-  mutate(boardgameexpansion = str_remove("[", boardgameexpansion))
-  rowwise() %>% 
-  mutate(nb_expansions = sum(!is.na(str_split(boardgameexpansion, ","))))
+categories <- details %>% 
+  filter(!is.na(category)) %>% 
+  select(id, category) %>% 
+  mutate(category = str_sub(category, 2, -2)) %>% 
+  mutate(nb_categories = ifelse(is.na(category), 0,
+                                lengths(str_split(category, ",")))) %>% 
+  separate(category, paste0("cat", 1:max(.$nb_categories)), ",") %>% 
+  select(-nb_categories) %>% 
+  pivot_longer(!id, names_to = "category", values_drop_na = TRUE) %>% 
+  select(id, category = value) %>% 
+  mutate(category = parse_character(category, trim_ws = TRUE)) %>% 
+  mutate(category = str_sub(category, 2, -2))
+
   
 
 # Clean chocolate dataset
