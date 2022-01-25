@@ -24,6 +24,11 @@ rm(tuesdata)
 
 # Data wrangling ----
 
+# Explore data
+
+glimpse(details)
+glimpse(ratings)
+
 # Clean chocolate dataset
 
 chocolate <- chocolate %>% 
