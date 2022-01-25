@@ -64,6 +64,27 @@ categories <- details %>%
   mutate(category = parse_character(category, trim_ws = TRUE)) %>% 
   mutate(category = str_sub(category, 2, -2))
 
+# Create mechanics dataset :
+# 1) remove games w/o mechanic
+# 2) select columns
+# 3) remove "[" and "]" from strings
+# 4) count number of mechanics per game
+# 5) split mechanics into separate columns
+# 6) transform into long format using pivot_longer
+
+mechanics <- details %>% 
+  filter(!is.na(category)) %>% 
+  select(id, mechanic) %>% 
+  mutate(mechanic = str_sub(mechanic, 2, -2)) %>% 
+  mutate(nb_mechanics = ifelse(is.na(mechanic), 0,
+                                lengths(str_split(mechanic, ",")))) %>% 
+  separate(mechanic, paste0("mech", 1:max(.$nb_mechanics)), ",") %>% 
+  select(-nb_mechanics) %>% 
+  pivot_longer(!id, names_to = "mechanic", values_drop_na = TRUE) %>% 
+  select(id, mechanic = value) %>% 
+  mutate(mechanic = parse_character(mechanic, trim_ws = TRUE)) %>% 
+  mutate(mechanic = str_sub(mechanic, 2, -2))
+
   
 
 # Clean chocolate dataset
