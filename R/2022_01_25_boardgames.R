@@ -26,8 +26,23 @@ rm(tuesdata)
 
 # Explore data
 
+expansions <- str_split(details$boardgameexpansion, ",")
+
+df<-data.frame(x=runif(24),value=rep(c("B","C;D",NA,"CG;M;Bac","GCP;Coag+","GCP;CNS"),each=4))
+count <- df %>% 
+  rowwise() %>% 
+  mutate(count = sum(!is.na(unlist(str_split(value, ";")))))
+
+
 glimpse(details)
 glimpse(ratings)
+
+expansions <- details %>% 
+  select(num:primary, boardgameexpansion) %>% 
+  mutate(boardgameexpansion = str_remove("[", boardgameexpansion))
+  rowwise() %>% 
+  mutate(nb_expansions = sum(!is.na(str_split(boardgameexpansion, ","))))
+  
 
 # Clean chocolate dataset
 
