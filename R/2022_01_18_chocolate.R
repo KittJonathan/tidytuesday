@@ -1,24 +1,23 @@
 # TidyTuesday challenge
-# Date : 2022-01-25
-# Board games
-# https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-01-25/readme.md
+# Date : 2022-01-18
+# Chocolate bars
+# https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-01-18/readme.md
 
 # Load packages ----
 
-#library(showtext)
+library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
 
 # Import fonts ----
 
-#font_add_google("Poiret One", "Poiret")
-#showtext_auto()
+font_add_google("Poiret One", "Poiret")
+showtext_auto()
 
 # Import dataset ----
 
-tuesdata <- tidytuesdayR::tt_load('2022-01-25')
-details <- tuesdata$details
-ratings <- tuesdata$ratings
+tuesdata <- tidytuesdayR::tt_load('2022-01-18')
+chocolate <- tuesdata$chocolate
 rm(tuesdata)
 
 # Data wrangling ----
