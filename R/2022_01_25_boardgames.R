@@ -85,6 +85,28 @@ mechanics <- details %>%
   mutate(mechanic = parse_character(mechanic, trim_ws = TRUE)) %>% 
   mutate(mechanic = str_sub(mechanic, 2, -2))
 
+# Create designers dataset :
+# 1) remove games w/o designer
+# 2) select columns
+# 3) remove "[" and "]" from strings
+# 4) count number of designers per game
+# 5) split designers into separate columns
+# 6) transform into long format using pivot_longer
+
+designers <- details %>% 
+  filter(!is.na(designer)) %>% 
+  select(id, designer) %>% 
+  mutate(designer = str_sub(designer, 2, -2)) %>% 
+  mutate(nb_designers = ifelse(is.na(designer), 0,
+                               lengths(str_split(designer, ",")))) %>% 
+  separate(designer, paste0("designer", 1:max(.$nb_designers)), ",") %>% 
+  select(-nb_designers) %>% 
+  pivot_longer(!id, names_to = "designer", values_drop_na = TRUE) %>% 
+  select(id, designer = value) %>% 
+  mutate(designer = parse_character(designer, trim_ws = TRUE)) %>% 
+  mutate(designer = str_sub(designer, 2, -2)) %>% 
+  filter(designer != "(Uncredited)")
+
   
 
 # Clean chocolate dataset
