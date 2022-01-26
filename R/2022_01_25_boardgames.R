@@ -5,6 +5,8 @@
 
 # Load packages ----
 
+library(gt)
+library(gtExtras)
 library(patchwork)
 library(showtext)
 library(tidytuesdayR)
@@ -230,6 +232,22 @@ p3 <- ggplot(d3, aes(x = year, y = n)) +
         plot.title = element_text(family = "Dance", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
+
+# Most owned games ----
+
+d4 <- games %>% 
+  select(name, year, owned, average, thumbnail) %>% 
+  arrange(desc(owned)) %>% 
+  head(10)
+
+d4 %>% 
+  select(Game = name,
+         Year = year,
+         Owned = owned,
+         Rating = average) %>% 
+  gt() %>% 
+  gt_hulk_col_numeric(Rating) %>% 
+  gt_plt_bar(column = Owned)
 
 # Create dataviz ----
 
