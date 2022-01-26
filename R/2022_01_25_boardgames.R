@@ -89,50 +89,6 @@ mechanics <- details %>%
   mutate(mechanic = parse_character(mechanic, trim_ws = TRUE)) %>% 
   mutate(mechanic = str_sub(mechanic, 2, -2))
 
-# Create designers dataset :
-# 1) remove games w/o designer
-# 2) select columns
-# 3) remove "[" and "]" from strings
-# 4) count number of designers per game
-# 5) split designers into separate columns
-# 6) transform into long format using pivot_longer
-
-designers <- details %>% 
-  filter(!is.na(designer)) %>% 
-  select(id, designer) %>% 
-  mutate(designer = str_sub(designer, 2, -2)) %>% 
-  mutate(nb_designers = ifelse(is.na(designer), 0,
-                               lengths(str_split(designer, ",")))) %>% 
-  separate(designer, paste0("designer", 1:max(.$nb_designers)), ",") %>% 
-  select(-nb_designers) %>% 
-  pivot_longer(!id, names_to = "designer", values_drop_na = TRUE) %>% 
-  select(id, designer = value) %>% 
-  mutate(designer = parse_character(designer, trim_ws = TRUE)) %>% 
-  mutate(designer = str_sub(designer, 2, -2)) %>% 
-  filter(designer != "(Uncredited)")
-
-# Create artists dataset :
-# 1) remove games w/o artist
-# 2) select columns
-# 3) remove "[" and "]" from strings
-# 4) count number of artists per game
-# 5) split artists into separate columns
-# 6) transform into long format using pivot_longer
-
-artists <- details %>% 
-  filter(!is.na(artist)) %>% 
-  select(id, artist) %>% 
-  mutate(artist = str_sub(artist, 2, -2)) %>% 
-  mutate(nb_artists = ifelse(is.na(artist), 0,
-                               lengths(str_split(artist, ",")))) %>% 
-  separate(artist, paste0("designer", 1:max(.$nb_artists)), ",") %>% 
-  select(-nb_artists) %>% 
-  pivot_longer(!id, names_to = "artist", values_drop_na = TRUE) %>% 
-  select(id, artist = value) %>% 
-  mutate(artist = parse_character(artist, trim_ws = TRUE)) %>% 
-  mutate(artist = str_sub(artist, 2, -2)) %>% 
-  filter(artist != "(Uncredited)")
-
 # Finish cleaning details dataset :
 # 1) count number of categories, mechanics, designers & artists for each game
 # 1) remove category, mechanic, designer & artist columns
@@ -160,6 +116,11 @@ rm(count_categories, count_mechanics,
    details, ratings)
 
 # New games ----
+
+d1 <- games %>% 
+  filter(year >= 1950 & year <= 2021) %>% 
+  count(year)
+  
 
 p1 <- ggplot(d1, aes(x = year, y = n)) +
   geom_line(colour = "firebrick", size = 2) +
@@ -251,10 +212,7 @@ p4 <- ggplot(d4, aes(x = playing_time / 60, y = mean)) +
 
 # Create dataviz ----
 
-patchwork <- (p1 + p2) / (p3 + p4)
-patchwork
-
-dataviz <- patchwork +
+board_games <- (p1 + p2) / (p3 + p4) +
   plot_annotation(title = "Board games since 1950",
                   caption = "Source : Board Game Geek, Graphic : Jonathan Kitt",
                   theme = theme(plot.title = element_text(size = 50, colour = "white",
@@ -262,107 +220,7 @@ dataviz <- patchwork +
                                                           margin = margin(20, 0, 25, 0)),
                                 plot.caption = element_text(size = 15, colour = "white", hjust = 1,
                                                             family = "poiret"),
-                                plot.background = element_rect(fill = "#292929", colour = NA)))
+                                plot.background = element_rect(fill = "#292929", colour = NA))) 
 
-dataviz
-
-Kaggle by way of Board Games Geek, with a hattip to David and Georgios .
-
-# Save dataviz ----
-
-ggsave("figs/2022_01_25_boardgames.png", dataviz,
+ggsave("figs/2022_01_25_boardgames.png", board_games,
        width = 1920/72, height = 1080/72, dpi = 72)
-
-# Page title ----
-
-ggplot() +
-  ggtitle("Board games") +
-  theme_minimal() +
-  theme(plot.title = element_text(family = "bangers", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
-        plot.background = element_rect(fill = "#292929", colour = NA),
-        panel.background = element_rect(fill = "#292929", colour = NA))
-
-p1 + p2
-
-(p1 |  p2) / (p3 | p3)
-
-(p1 +  p2) / (p3 + p3)
-
-# World map of producers ----
-
-world <- map_data("world") %>% 
-  dplyr::filter(region != "Antarctica") %>% 
-  dplyr::left_join(producers)
-
-labels <- tibble(region = c("Dominican Republic", "Ecuador", "Madagascar", "Peru", "Venezuela"),
-                 x = c(-50, -95, 72, -85, -42),
-                 y = c(23, -2, -18, -14, 9))
-
-map <- ggplot() +
-  geom_polygon(data = world,
-               mapping = aes(x = long,
-                             y = lat,
-                             group = group,
-                             fill = bin),
-               colour = "grey80") +
-  coord_fixed(1.3) +
-  geom_text(data = labels, 
-            mapping = aes(x = x, 
-                          y = y,
-                          label = region),
-            family = "Poiret", colour = "black", size = 15) +
-  scale_fill_manual(values = c("#faf8ec", "#c28954", "#8f5431",
-                               "#603217", "#420c00", "#120a08"),
-                    na.value = "#b39f80", na.translate = FALSE,
-                    guide = guide_legend(nrow = 1, margin = margin(0, 0, 30, 0))) +
-  ggtitle(label = "Top exporters of cocoa beans",
-          subtitle = "colour indicates number of destination countries") +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        panel.background = element_rect(fill = "#b39f80", colour = NA),
-        plot.background = element_rect(fill = "#b39f80"),
-        plot.title = element_text(family = "Poiret", hjust = 0.5,
-                                  colour = "white", size = 60,
-                                  margin = margin(10, 0, 0, 0)),
-        plot.subtitle = element_text(family = "Poiret", hjust = 0.5,
-                                     colour = "white", size = 50),
-        legend.title = element_blank(),
-        legend.text = element_text(family = "Poiret", colour = "black",
-                                   size = 35, margin = margin(l = -0.6, unit = "cm")),
-        legend.spacing.x = unit(0.75, "cm"),
-        legend.position = "bottom")
-
-ggsave("figs/2022_01_18_chocolate_map.png", map, dpi = 320, width = 12, height = 6)
-
-
-
-
-
-# Words describing low and high rated bars ----
-
-word_count <- characteristics %>% 
-  dplyr::count(characteristic, sort = T) %>% 
-  dplyr::filter(n > 100)
-
-word_levels <- word_count$characteristic
-
-word_ratings <- characteristics %>% 
-  dplyr::filter(characteristic %in% word_count$characteristic) %>% 
-  dplyr::group_by(characteristic) %>% 
-  dplyr::summarise(min_rating = min(rating),
-                   max_rating = max(rating)) %>% 
-  dplyr::mutate(characteristic = factor(characteristic,
-                                        levels = word_levels))
-
-ggplot() +
-  geom_segment(data = word_ratings,
-               mapping = aes(x = min_rating, xend = max_rating,
-                             y = characteristic, yend = characteristic))
-
-  geom_segment(data = ratings,
-               mapping = aes(x = min_rating, xend = max_rating,
-                             y = characteristic, yend = characteristic))
-
-# Save figs ----
