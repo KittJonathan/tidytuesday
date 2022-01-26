@@ -235,16 +235,17 @@ p3 <- ggplot(d3, aes(x = year, y = n)) +
 
 patchwork <- (p1 +  p2) / (p3 + p3)
 
-patchwork +
+dataviz <- patchwork +
   plot_annotation(title = "Board games",
                   theme = theme(plot.title = element_text(size = 40, colour = "white",
                                                           family = "bangers", hjust = 0.5,
                                                           margin = margin(20, 0, 20, 0)),
                                 plot.background = element_rect(fill = "#292929", colour = NA)))
-  
-    title = "Board games") &
-  theme(text = element_text(family = "bangers", colour = "white", hjust = 0.5, size = 25),
-        )
+
+# Save dataviz ----
+
+ggsave("figs/2022_01_25_boardgames.png", dataviz,
+       width = 1920/72, height = 1080/72, dpi = 72)
 
 # Page title ----
 
