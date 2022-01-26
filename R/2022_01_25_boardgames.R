@@ -6,14 +6,16 @@
 # Load packages ----
 
 library(patchwork)
-#library(showtext)
+library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
 
 
 # Import fonts ----
 
-#font_add_google("Poiret One", "Poiret")
+font_add_google("Bangers", "bangers")
+#font_add_google("Dancing Script", "Dance")
+font_add_google("Poiret One", "poiret")
 #showtext_auto()
 
 # Import dataset ----
@@ -169,16 +171,17 @@ d1 <- games %>%
 
 p1 <- ggplot(d1, aes(x = nb_mechanics, y = mean)) +
   geom_smooth(se = FALSE, size = 3, colour = "#004868") +
-  ggtitle("Does the number of mechanics in a game influence its minimum age ?") +
-  labs(x = "Number of mechanics", y = "Average minimum age") +
+  ggtitle("Complexity") +
+  labs(x = "Number of mechanics", y = "Minimum age") +
   xlim(c(1, 22)) +
   theme_minimal() +
-  theme(axis.title.x = element_text(colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(colour = "white", size = 20),
+  theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(family = "poiret", colour = "white", size = 20),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.title = element_text(family = "bangers", colour = "white", size = 35, hjust = 0.5,
+                                  margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
 
@@ -194,15 +197,15 @@ d2 <- games %>%
 
 p2 <- ggplot(d2, aes(x = playing_time / 60, y = mean)) +
   geom_smooth(se = FALSE, size = 3, colour = "#077643") +
-  ggtitle("Does the playing time of a game influence its ratings ?") +
+  ggtitle("Playing time") +
   labs(x = "Playing time (in hours)", y = "Average ratings") +
   theme_minimal() +
-  theme(axis.title.x = element_text(colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(colour = "white", size = 20),
+  theme(axis.title.x = element_text(family = "Dance", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(family = "Dance", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(family = "Dance", colour = "white", size = 20),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.title = element_text(family = "Dance", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
   
@@ -214,17 +217,41 @@ d3 <- games %>%
   filter(year <= 2021)
 
 p3 <- ggplot(d3, aes(x = year, y = n)) +
-  geom_point(colour = "#c481aa", size = 4) +
+  #geom_point(colour = "#c481aa", size = 4) +
   geom_line(colour = "#c481aa") +
-  ggtitle("Board games published by year") +
+  ggtitle("New games") +
   labs(x = "Year", y = "Number of games") +
   theme_minimal() +
-  theme(axis.title.x = element_text(colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(colour = "white", size = 20),
+  theme(axis.title.x = element_text(family = "Dance", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(family = "Dance", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(family = "Dance", colour = "white", size = 20),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.title = element_text(family = "Dance", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.background = element_rect(fill = "#292929", colour = NA),
+        panel.background = element_rect(fill = "#292929", colour = NA))
+
+# Create dataviz ----
+
+patchwork <- (p1 +  p2) / (p3 + p3)
+
+patchwork +
+  plot_annotation(title = "Board games",
+                  theme = theme(plot.title = element_text(size = 40, colour = "white",
+                                                          family = "bangers", hjust = 0.5,
+                                                          margin = margin(20, 0, 20, 0)),
+                                plot.background = element_rect(fill = "#292929", colour = NA)))
+  
+    title = "Board games") &
+  theme(text = element_text(family = "bangers", colour = "white", hjust = 0.5, size = 25),
+        )
+
+# Page title ----
+
+ggplot() +
+  ggtitle("Board games") +
+  theme_minimal() +
+  theme(plot.title = element_text(family = "bangers", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
 
