@@ -5,8 +5,6 @@
 
 # Load packages ----
 
-library(gt)
-library(gtExtras)
 library(patchwork)
 library(showtext)
 library(tidytuesdayR)
@@ -16,9 +14,7 @@ library(tidyverse)
 # Import fonts ----
 
 font_add_google("Bangers", "bangers")
-#font_add_google("Dancing Script", "Dance")
 font_add_google("Poiret One", "poiret")
-#showtext_auto()
 
 # Import dataset ----
 
@@ -163,16 +159,84 @@ games <- details %>%
 rm(count_categories, count_mechanics,
    details, ratings)
 
-# Does the number of mechanics in a game influence its minimum age ? ----
+# New games ----
 
-d1 <- games %>% 
+d1 <- games %>%
+  count(year) %>% 
+  filter(year <= 2021)
+
+p1 <- ggplot(d1, aes(x = year, y = n)) +
+  #geom_point(colour = "#c481aa", size = 4) +
+  geom_line(colour = "firebrick", size = 2) +
+  annotate("point", x = 2017, y = 1325, size = 8, colour = "firebrick1") +
+  annotate("text", x = 2010, y = 1400, size = 8, colour = "white",
+           label = "1325 new games in 2017", family = "poiret") +
+  ggtitle("New games") +
+  labs(x = "Year", y = "Number of games") +
+  theme_minimal() +
+  theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(family = "poiret", colour = "white", size = 20),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(colour = "grey30"),
+        plot.title = element_text(family = "bangers", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.background = element_rect(fill = "#292929", colour = NA),
+        panel.background = element_rect(fill = "#292929", colour = NA))
+
+p1
+
+# Game categories ----
+
+d2 <- categories %>% 
+  count(category, sort = TRUE) %>% 
+  head(5) %>% 
+  mutate(pct = round(n / sum(n) * 100)) %>% 
+  mutate(category = fct_reorder(category, -n)) %>% 
+  mutate(lab.pos = cumsum(pct) - (0.5*pct))
+
+ggplot(d2, mapping = aes(x = "", y = pct, fill = category)) +
+  geom_bar(stat = "identity") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(y = lab.pos, label = paste0(pct, " %")), colour = "white")
+
+ggplot(d2, mapping = aes(x = "", y = pct, fill = category)) +
+  geom_bar(width = 1, stat = "identity", colour = "#292929") +
+  coord_polar("y", start = 0)
+
+p2 <- ggplot(d2, mapping = aes(x = 2, y = pct, fill = category)) +
+  geom_bar(width = 1,stat = "identity", colour = "#292929") +
+  coord_polar(theta = "y", start = 0) +
+  scale_fill_manual(values = c("#836AA6", "#F299B1",
+                               "#F2E291", "#A67C2E", "#F29985")) +
+  xlim(0, 2.5) +
+  annotate("text", x = 0, y = 0, label = "Top 5 categories",
+           colour = "white", family = "bangers", size = 15) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "#292929", colour = NA),
+        plot.background = element_rect(fill = "#292929", colour = NA),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        legend.text = element_text(family = "poiret", colour = "white", size = 20,
+                                   margin = margin(l = -0.6, unit = "cm")),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.margin = margin(0, 0, 25, 0),
+        legend.spacing.x = unit(0.75, "cm"))
+
+p2  
+
+# Game complexity ----
+
+d3 <- games %>% 
   select(id, name, min_age, nb_mechanics) %>% 
   filter(!is.na(nb_mechanics)) %>% 
   group_by(nb_mechanics) %>% 
   summarise(mean = mean(min_age))
 
-p1 <- ggplot(d1, aes(x = nb_mechanics, y = mean)) +
-  geom_smooth(se = FALSE, size = 3, colour = "#004868") +
+p3 <- ggplot(d3, aes(x = nb_mechanics, y = mean)) +
+  geom_smooth(se = FALSE, size = 2, colour = "royalblue2") +
   ggtitle("Complexity") +
   labs(x = "Number of mechanics", y = "Minimum age") +
   xlim(c(1, 22)) +
@@ -186,6 +250,12 @@ p1 <- ggplot(d1, aes(x = nb_mechanics, y = mean)) +
                                   margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
+
+p3
+
+# Does the number of mechanics in a game influence its minimum age ? ----
+
+
 
 
 # Does the play time influence a game's ratings ? ----
@@ -212,26 +282,10 @@ p2 <- ggplot(d2, aes(x = playing_time / 60, y = mean)) +
         panel.background = element_rect(fill = "#292929", colour = NA))
   
   
-# How many games published each year ? ----
 
-d3 <- games %>%
-  count(year) %>% 
-  filter(year <= 2021)
 
-p3 <- ggplot(d3, aes(x = year, y = n)) +
-  #geom_point(colour = "#c481aa", size = 4) +
-  geom_line(colour = "#c481aa") +
-  ggtitle("New games") +
-  labs(x = "Year", y = "Number of games") +
-  theme_minimal() +
-  theme(axis.title.x = element_text(family = "Dance", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(family = "Dance", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(family = "Dance", colour = "white", size = 20),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "Dance", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
-        plot.background = element_rect(fill = "#292929", colour = NA),
-        panel.background = element_rect(fill = "#292929", colour = NA))
+
+
 
 # Most owned games ----
 
@@ -252,6 +306,9 @@ p4 <- d4 %>%
               table.width = "100%", stub.background.color = "#292929")
 
 # Create dataviz ----
+
+patchwork <- (p1 + p2)
+patchwork
 
 
 dataviz <- patchwork +
