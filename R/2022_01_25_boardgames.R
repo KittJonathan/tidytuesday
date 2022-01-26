@@ -161,16 +161,8 @@ rm(count_categories, count_mechanics,
 
 # New games ----
 
-d1 <- games %>%
-  count(year) %>% 
-  filter(year <= 2021)
-
 p1 <- ggplot(d1, aes(x = year, y = n)) +
-  #geom_point(colour = "#c481aa", size = 4) +
   geom_line(colour = "firebrick", size = 2) +
-  annotate("point", x = 2017, y = 1325, size = 8, colour = "firebrick1") +
-  annotate("text", x = 2010, y = 1400, size = 8, colour = "white",
-           label = "1325 new games in 2017", family = "poiret") +
   ggtitle("New games") +
   labs(x = "Year", y = "Number of games") +
   theme_minimal() +
@@ -179,11 +171,9 @@ p1 <- ggplot(d1, aes(x = year, y = n)) +
         axis.text = element_text(family = "poiret", colour = "white", size = 20),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "bangers", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
-
-p1
 
 # Game categories ----
 
@@ -191,41 +181,23 @@ d2 <- categories %>%
   count(category, sort = TRUE) %>% 
   head(5) %>% 
   mutate(pct = round(n / sum(n) * 100)) %>% 
-  mutate(category = fct_reorder(category, -n)) %>% 
-  mutate(lab.pos = cumsum(pct) - (0.5*pct))
+  mutate(category = fct_reorder(category, n))
 
-ggplot(d2, mapping = aes(x = "", y = pct, fill = category)) +
-  geom_bar(stat = "identity") +
-  coord_polar("y", start = 0) +
-  geom_text(aes(y = lab.pos, label = paste0(pct, " %")), colour = "white")
-
-ggplot(d2, mapping = aes(x = "", y = pct, fill = category)) +
-  geom_bar(width = 1, stat = "identity", colour = "#292929") +
-  coord_polar("y", start = 0)
-
-p2 <- ggplot(d2, mapping = aes(x = 2, y = pct, fill = category)) +
-  geom_bar(width = 1,stat = "identity", colour = "#292929") +
-  coord_polar(theta = "y", start = 0) +
+p2 <- ggplot(d2, mapping = aes(x = pct, y = category, fill = category)) +
+  geom_col(show.legend = FALSE) +
+  ggtitle("Top 5 categories (%)") +
   scale_fill_manual(values = c("#836AA6", "#F299B1",
                                "#F2E291", "#A67C2E", "#F29985")) +
-  xlim(0, 2.5) +
-  annotate("text", x = 0, y = 0, label = "Top 5 categories",
-           colour = "white", family = "bangers", size = 15) +
   theme_minimal() +
-  theme(panel.background = element_rect(fill = "#292929", colour = NA),
+  theme(axis.title = element_blank(),
+        axis.text = element_text(family = "poiret", size = 20, colour = "white"),
+        axis.text.y = element_text(margin = margin(0, -5, 0, 10)),
+        panel.background = element_rect(fill = "#292929", colour = NA),
         plot.background = element_rect(fill = "#292929", colour = NA),
-        panel.grid = element_blank(),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        legend.text = element_text(family = "poiret", colour = "white", size = 20,
-                                   margin = margin(l = -0.6, unit = "cm")),
-        legend.title = element_blank(),
-        legend.position = "bottom",
-        legend.direction = "horizontal",
-        legend.margin = margin(0, 0, 25, 0),
-        legend.spacing.x = unit(0.75, "cm"))
-
-p2  
+        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(colour = "grey30"))
 
 # Game complexity ----
 
@@ -240,18 +212,18 @@ p3 <- ggplot(d3, aes(x = nb_mechanics, y = mean)) +
   ggtitle("Complexity") +
   labs(x = "Number of mechanics", y = "Minimum age") +
   xlim(c(1, 22)) +
+  scale_y_continuous(breaks = c(9, 11, 13)) +
   theme_minimal() +
   theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
         axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
         axis.text = element_text(family = "poiret", colour = "white", size = 20),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "bangers", colour = "white", size = 35, hjust = 0.5,
+        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5,
                                   margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
 
-p3
 
 # Game duration ----
 
@@ -264,15 +236,16 @@ d4 <- games %>%
 
 p4 <- ggplot(d4, aes(x = playing_time / 60, y = mean)) +
   geom_smooth(se = FALSE, size = 3, colour = "#077643") +
-  ggtitle("Playing time") +
-  labs(x = "Playing time (in hours)", y = "Average ratings") +
+  ggtitle("Duration") +
+  labs(x = "Hours", y = "Rating") +
+  scale_y_continuous(breaks = c(6.5, 7)) +
   theme_minimal() +
-  theme(axis.title.x = element_text(family = "Dance", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(family = "Dance", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(family = "Dance", colour = "white", size = 20),
+  theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
+        axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
+        axis.text = element_text(family = "poiret", colour = "white", size = 20),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "Dance", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
+        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
 
@@ -281,13 +254,19 @@ p4 <- ggplot(d4, aes(x = playing_time / 60, y = mean)) +
 patchwork <- (p1 + p2) / (p3 + p4)
 patchwork
 
-
 dataviz <- patchwork +
-  plot_annotation(title = "Board games",
-                  theme = theme(plot.title = element_text(size = 40, colour = "white",
+  plot_annotation(title = "Board games since 1950",
+                  caption = "Source : Board Game Geek, Graphic : Jonathan Kitt",
+                  theme = theme(plot.title = element_text(size = 50, colour = "white",
                                                           family = "bangers", hjust = 0.5,
-                                                          margin = margin(20, 0, 20, 0)),
+                                                          margin = margin(20, 0, 25, 0)),
+                                plot.caption = element_text(size = 15, colour = "white", hjust = 1,
+                                                            family = "poiret"),
                                 plot.background = element_rect(fill = "#292929", colour = NA)))
+
+dataviz
+
+Kaggle by way of Board Games Geek, with a hattip to David and Georgios .
 
 # Save dataviz ----
 
