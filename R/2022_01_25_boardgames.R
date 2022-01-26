@@ -253,21 +253,16 @@ p3 <- ggplot(d3, aes(x = nb_mechanics, y = mean)) +
 
 p3
 
-# Does the number of mechanics in a game influence its minimum age ? ----
+# Game duration ----
 
-
-
-
-# Does the play time influence a game's ratings ? ----
-
-d2 <- games %>% 
+d4 <- games %>% 
   select(id, name, playing_time, average, bayes_average) %>% 
   group_by(playing_time) %>% 
   summarise(mean = mean(average)) %>% 
   filter(playing_time <= 300)
 
 
-p2 <- ggplot(d2, aes(x = playing_time / 60, y = mean)) +
+p4 <- ggplot(d4, aes(x = playing_time / 60, y = mean)) +
   geom_smooth(se = FALSE, size = 3, colour = "#077643") +
   ggtitle("Playing time") +
   labs(x = "Playing time (in hours)", y = "Average ratings") +
@@ -280,34 +275,10 @@ p2 <- ggplot(d2, aes(x = playing_time / 60, y = mean)) +
         plot.title = element_text(family = "Dance", colour = "white", size = 35, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
         plot.background = element_rect(fill = "#292929", colour = NA),
         panel.background = element_rect(fill = "#292929", colour = NA))
-  
-  
-
-
-
-
-
-# Most owned games ----
-
-d4 <- games %>% 
-  select(name, year, owned, average, thumbnail) %>% 
-  arrange(desc(owned)) %>% 
-  head(10)
-
-p4 <- d4 %>% 
-  select(Game = name,
-         Year = year,
-         Owned = owned,
-         Rating = average) %>% 
-  gt() %>% 
-  gt_hulk_col_numeric(Rating) %>% 
-  gt_plt_bar(column = Owned) %>% 
-  tab_options(table.background.color = "#292929",
-              table.width = "100%", stub.background.color = "#292929")
 
 # Create dataviz ----
 
-patchwork <- (p1 + p2)
+patchwork <- (p1 + p2) / (p3 + p4)
 patchwork
 
 
