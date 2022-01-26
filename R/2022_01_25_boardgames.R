@@ -240,18 +240,19 @@ d4 <- games %>%
   arrange(desc(owned)) %>% 
   head(10)
 
-d4 %>% 
+p4 <- d4 %>% 
   select(Game = name,
          Year = year,
          Owned = owned,
          Rating = average) %>% 
   gt() %>% 
   gt_hulk_col_numeric(Rating) %>% 
-  gt_plt_bar(column = Owned)
+  gt_plt_bar(column = Owned) %>% 
+  tab_options(table.background.color = "#292929",
+              table.width = "100%", stub.background.color = "#292929")
 
 # Create dataviz ----
 
-patchwork <- (p1 +  p2) / (p3 + p3)
 
 dataviz <- patchwork +
   plot_annotation(title = "Board games",
