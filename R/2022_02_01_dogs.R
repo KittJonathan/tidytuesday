@@ -30,6 +30,34 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Data wrangling ----
 
+# Clean traits dataset
+# Add rank variable
+# Keep numeric variables
+# Transform to long format
+# Add trait group information
+
+traits <- breed_traits %>% 
+  add_column(rank = 1:nrow(.), .before = "Breed") %>% 
+  select(-c(`Coat Type`, `Coat Length`)) %>% 
+  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
+  mutate(traot_group = case_when(trait %in% c("Affectionate With Family",
+                                              "Good With Young Children",
+                                              "Good With Other Dogs") ~ "Family Life",
+                                 trait %in% c("Shedding Level",
+                                              "Coat Grooming Frequency",
+                                              "Drooling Level") ~ "Physical",
+                                 trait %in% c("Openness To Strangers",
+                                              "Playfulness Level",
+                                              "Watchdog/Protective Nature",
+                                              "Adaptability Level") ~ "Social",
+                                 trait %in% c("Trainability Level",
+                                              "Energy Level",
+                                              "Barking Level",
+                                              "Mental Stimulation Needs") ~ "Personality")) %>% 
+  select(rank, Breed, trait_group, trait, value) %>% 
+  mutate(Breed = factor(Breed, levels))
+  
+
 # Create traits groups
 trait_groups <- trait_description %>% 
   mutate(trait_group = c(rep("Family Life", 3),
@@ -54,12 +82,9 @@ traits_scores <- breed_traits %>%
   mutate(trait_group_score = sum(value),
          n = n()) %>% 
   mutate(score_100 = trait_group_score * 100 / (n * 5)) %>% 
-  select(rank:value, trait_group_score = score_100) %>% 
-  ungroup() %>% 
-  group_by(rank) %>% 
-  mutate(overall_score = sum(value),
-         n = n()) %>% 
-  mutate(overall_score = overall_score * 100 / (n * 5))
+  select(rank:trait_group, trait_group_score = score_100) %>% 
+  slice(1) %>% 
+  ungroup()
   
 
 
