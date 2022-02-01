@@ -23,16 +23,6 @@ breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascien
 trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
 breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
 
-# Explore datasets ----
-
-glimpse(breed_rank)
-glimpse(breed_traits)
-glimpse(trait_description)
-
-head(breed_rank)
-head(breed_traits)
-head(trait_description)
-
 # Data wrangling ----
 
 # Add rank column in traits dataset (order corresponds to the 2020 ranks)
