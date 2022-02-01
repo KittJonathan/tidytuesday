@@ -7,6 +7,7 @@
 
 #library(patchwork)
 #library(showtext)
+library(janitor)
 library(tidytuesdayR)
 library(tidyverse)
 
@@ -33,6 +34,13 @@ head(breed_traits)
 head(trait_description)
 
 # Data wrangling ----
+
+# Clean breed rank: keep data for latest year
+head(breed_rank)
+breed_rank_2020 <- breed_rank %>% 
+  select(Breed, rank = `2020 Rank`, Image) %>% 
+  janitor::clean_names()
+  
 
 # Clean details dataset : 
 # 1) keep games published from 1950 onwards
