@@ -30,6 +30,13 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Data wrangling ----
 
+# Extract data from links
+
+url <- breed_rank$links[1]
+d1 <- rvest::read_html(url)
+
+# //*[contains(concat( " ", @class, " " ), concat( " ", "bpm-my4", " " ))]
+
 # Clean traits dataset
 # Add rank variable
 # Keep numeric variables
