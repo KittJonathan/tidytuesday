@@ -35,11 +35,7 @@ head(trait_description)
 
 # Data wrangling ----
 
-# Clean breed rank: keep data for latest year
-head(breed_rank)
-breed_rank_2020 <- breed_rank %>% 
-  select(Breed, rank = `2020 Rank`, Image) %>% 
-  janitor::clean_names()
+
   
 
 # Clean details dataset : 
