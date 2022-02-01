@@ -32,8 +32,15 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Extract data from links
 
+# ".breed-page__intro__temperment
+
 url <- breed_rank$links[1]
 d1 <- rvest::read_html(url)
+
+d1 %>% 
+  rvest::xml_nodes(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "bpm-my4", " " ))]')
+
+d1 %>% rvest::html_element(".breed-page__no-page-margin")
 
 # //*[contains(concat( " ", @class, " " ), concat( " ", "bpm-my4", " " ))]
 
