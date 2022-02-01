@@ -20,7 +20,17 @@ library(tidyverse)
 
 breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_traits.csv')
 trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
-breed_rank_all <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
+breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
+
+# Explore datasets ----
+
+glimpse(breed_rank)
+glimpse(breed_traits)
+glimpse(trait_description)
+
+head(breed_rank)
+head(breed_traits)
+head(trait_description)
 
 # Data wrangling ----
 
