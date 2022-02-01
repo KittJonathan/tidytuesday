@@ -28,17 +28,6 @@ breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascien
 trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
 breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
 
-# PCA ----
-
-pca_fit <- breed_traits %>% 
-  select(where(is.numeric)) %>% 
-  prcomp(scale = TRUE)
-
-pca_fit %>% 
-  augment(breed_traits) %>% 
-  ggplot(aes(.fittedPC1, .fittedPC2)) +
-  geom_point(size = 1.5)
-
 # Data wrangling ----
 
 # Create traits groups
