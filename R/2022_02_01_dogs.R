@@ -3,11 +3,16 @@
 # Dog breeds
 # https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-02-01/readme.md
 
+# Useful links ----
+
+# https://clauswilke.com/blog/2020/09/07/pca-tidyverse-style/
+
 # Load packages ----
 
 #library(patchwork)
 #library(showtext)
-library(janitor)
+library(broom)
+#library(janitor)
 library(tidytuesdayR)
 library(tidyverse)
 
@@ -22,6 +27,17 @@ library(tidyverse)
 breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_traits.csv')
 trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
 breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
+
+# PCA ----
+
+pca_fit <- breed_traits %>% 
+  select(where(is.numeric)) %>% 
+  prcomp(scale = TRUE)
+
+pca_fit %>% 
+  augment(breed_traits) %>% 
+  ggplot(aes(.fittedPC1, .fittedPC2)) +
+  geom_point(size = 1.5)
 
 # Data wrangling ----
 
