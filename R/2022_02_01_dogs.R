@@ -35,8 +35,20 @@ head(trait_description)
 
 # Data wrangling ----
 
+# Add rank column in traits dataset (order corresponds to the 2020 ranks)
+traits <- breed_traits %>% 
+  tibble::add_column(rank = 1:nrow(.), .before = "Breed")
 
-  
+# Create traits groups
+
+trait_description <- trait_description %>% 
+  mutate(trait_group = c(rep("Family Life", 3),
+                         rep("Physical", 5),
+                         rep("Social", 4),
+                         rep("Personality", 4))) %>% 
+  select(trait_group, everything())
+
+trait_description
 
 # Clean details dataset : 
 # 1) keep games published from 1950 onwards
