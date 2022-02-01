@@ -25,20 +25,38 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Data wrangling ----
 
-# Add rank column in traits dataset (order corresponds to the 2020 ranks)
-traits <- breed_traits %>% 
-  tibble::add_column(rank = 1:nrow(.), .before = "Breed")
-
 # Create traits groups
-
-trait_description <- trait_description %>% 
+trait_groups <- trait_description %>% 
   mutate(trait_group = c(rep("Family Life", 3),
                          rep("Physical", 5),
                          rep("Social", 4),
                          rep("Personality", 4))) %>% 
-  select(trait_group, everything())
+  select(trait_group, trait = Trait)
 
-trait_description
+# Add rank column in traits dataset (order corresponds to the 2020 ranks)
+# Transform to long format
+# Add trait group information and rearrange table
+# Calculate total score for each trait group / 100
+# Keep 1 row per group
+traits_scores <- breed_traits %>% 
+  add_column(rank = 1:nrow(.), .before = "Breed") %>% 
+  select(rank:`Drooling Level`, `Openness To Strangers`:`Mental Stimulation Needs`) %>% 
+  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
+  left_join(trait_groups) %>% 
+  select(rank, Breed, trait_group, trait, value) %>% 
+  arrange(rank, trait_group, trait) %>% 
+  group_by(rank, trait_group) %>% 
+  mutate(trait_group_score = sum(value),
+         n = n()) %>% 
+  mutate(score_100 = trait_group_score * 100 / (n * 5)) %>% 
+  select(rank:value, trait_group_score = score_100) %>% 
+  ungroup() %>% 
+  group_by(rank) %>% 
+  mutate(overall_score = sum(value),
+         n = n()) %>% 
+  mutate(overall_score = overall_score * 100 / (n * 5))
+  
+
 
 # Clean details dataset : 
 # 1) keep games published from 1950 onwards
