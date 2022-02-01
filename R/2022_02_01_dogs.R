@@ -5,23 +5,22 @@
 
 # Load packages ----
 
-library(patchwork)
-library(showtext)
+#library(patchwork)
+#library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
 
 
 # Import fonts ----
 
-font_add_google("Bangers", "bangers")
-font_add_google("Poiret One", "poiret")
+#font_add_google("Bangers", "bangers")
+#font_add_google("Poiret One", "poiret")
 
-# Import dataset ----
+# Import datasets ----
 
-tuesdata <- tidytuesdayR::tt_load('2022-01-25')
-details <- tuesdata$details
-ratings <- tuesdata$ratings
-rm(tuesdata)
+breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_traits.csv')
+trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
+breed_rank_all <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
 
 # Data wrangling ----
 
