@@ -40,7 +40,7 @@ traits <- breed_traits %>%
   add_column(rank = 1:nrow(.), .before = "Breed") %>% 
   select(-c(`Coat Type`, `Coat Length`)) %>% 
   pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
-  mutate(traot_group = case_when(trait %in% c("Affectionate With Family",
+  mutate(trait_group = case_when(trait %in% c("Affectionate With Family",
                                               "Good With Young Children",
                                               "Good With Other Dogs") ~ "Family Life",
                                  trait %in% c("Shedding Level",
@@ -55,7 +55,14 @@ traits <- breed_traits %>%
                                               "Barking Level",
                                               "Mental Stimulation Needs") ~ "Personality")) %>% 
   select(rank, Breed, trait_group, trait, value) %>% 
-  mutate(Breed = factor(Breed, levels))
+  mutate(Breed = factor(Breed, levels = unique(Breed)),
+         trait_group = factor(trait_group, levels = unique(trait_group)),
+         trait = factor(trait, levels = unique(trait)))
+
+ggplot(data = traits, 
+       mapping = aes(y = Breed, x = trait,
+                     colour = value)) +
+  geom_point()
   
 
 # Create traits groups
