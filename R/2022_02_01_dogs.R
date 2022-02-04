@@ -50,9 +50,18 @@ ranks <- breed_rank %>%
          rank_2020 = '2020 Rank') %>% 
   pivot_longer(cols = -Breed, names_to = "year", values_to = "rank") %>% 
   mutate(year = str_remove(year, "rank_")) %>% 
-  group_by(Breed) %>% 
-  mutate(overall_rank = sum(rank)) %>% 
-  ungroup()
+  mutate(year = factor(year, levels = 2013:2020))
+
+rm(breed_rank)
+
+# Create table ----
+
+ranks %>% 
+  filter(year == 2020) %>% 
+  head(10) %>% 
+  select(RANK = rank, BREED = Breed) %>% 
+  gt()
+  
 
 # Top 10 breeds overall
 
