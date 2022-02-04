@@ -40,6 +40,7 @@ images <- breed_rank %>%
 
 ranks <- breed_rank %>% 
   select(Breed, 
+         Image,
          rank_2013 = '2013 Rank',
          rank_2014 = '2014 Rank',
          rank_2015 = '2015 Rank',
@@ -48,7 +49,7 @@ ranks <- breed_rank %>%
          rank_2018 = '2018 Rank',
          rank_2019 = '2019 Rank',
          rank_2020 = '2020 Rank') %>% 
-  pivot_longer(cols = -Breed, names_to = "year", values_to = "rank") %>% 
+  pivot_longer(cols = -c(Breed, Image), names_to = "year", values_to = "rank") %>% 
   mutate(year = str_remove(year, "rank_")) %>% 
   mutate(year = factor(year, levels = 2013:2020))
 
@@ -61,8 +62,18 @@ traits <- breed_traits
 ranks %>% 
   filter(year == 2020) %>% 
   head(10) %>% 
-  select(RANK = rank, BREED = Breed) %>% 
-  gt()
+  select(Image, RANK = rank, BREED = Breed) %>% 
+  gt() %>% 
+  gt_img_rows(Image)
+
+team_df <- readRDS(url("https://github.com/nflverse/nflfastR-data/raw/master/teams_colors_logos.rds"))
+
+team_df %>%
+  dplyr::select(team_nick, team_abbr, team_conf, team_division, team_wordmark) %>%
+  head(8) %>%
+  gt(groupname_col = "team_conf") %>%
+  gt_merge_stack(col1 = team_nick, col2 = team_division) %>%
+  gt_img_rows(team_wordmark)
   
 
 # Top 10 breeds overall
