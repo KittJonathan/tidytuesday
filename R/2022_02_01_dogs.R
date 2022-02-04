@@ -5,24 +5,14 @@
 
 # Load packages ----
 
-#library(patchwork)
-#library(showtext)
-#library(broom)
-#library(janitor)
 library(gt)
 library(gtExtras)
 library(tidytuesdayR)
 library(tidyverse)
 
-# Import fonts ----
-
-#font_add_google("Bangers", "bangers")
-#font_add_google("Poiret One", "poiret")
-
 # Import datasets ----
 
 breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_traits.csv')
-trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
 breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
 
 # Data wrangling ----
@@ -44,12 +34,8 @@ ranks <- breed_rank %>%
   mutate(year = str_remove(year, "rank_")) %>% 
   mutate(year = factor(year, levels = 2013:2020)) %>% 
   group_by(Breed) %>% 
-  mutate(rank_evolution = rank[year == 2013] - rank[year == 2020]) %>% 
   filter(year == 2020) %>% 
-  select(rank, Breed, rank_evolution, Image) %>% 
-  mutate(rank_evolution = case_when(rank_evolution == 0 ~ "=",
-                                    rank_evolution > 0 ~ paste0("+", rank_evolution),
-                                    TRUE ~ as.character(rank_evolution)))
+  select(rank, Breed, Image)
 
 # Clean trait groups dataset with scores 
 
@@ -90,336 +76,58 @@ coat <- breed_traits %>%
   mutate(rank = 1:nrow(.)) %>% 
   select(rank, Breed, `Coat Type`, `Coat Length`)
 
-# Join datasets
+# Join datasets and add group information from AKC website 
+# Keep Top 10 breeds for 2020
 
 dog_breeds <- ranks %>% 
   left_join(coat, by = "rank") %>% 
   left_join(traits, by = "rank") %>% 
-  select(rank, Image, Breed, rank_evolution, `Coat Type`, `Coat Length`,
+  filter(rank <= 10) %>% 
+  mutate(group = c("Sporting", "Non-Sporting", "Herding", "Sporting",
+                   "Non-Sporting", "Non-Sporting", "Hound", "Working",
+                   "Sporting", "Hound")) %>% 
+  select(rank, Image, Breed, group, `Coat Type`, `Coat Length`,
          `Family Life`, Physical, Social, Personality)
 
 # Clean global environment
 
-rm(breed_rank, breed_traits, coat, ranks, trait_description, traits)
-  
-  
+rm(breed_rank, breed_traits, coat, ranks, traits)
 
-traits_scores <- breed_traits %>% 
-  add_column(rank = 1:nrow(.), .before = "Breed") %>% 
-  select(rank:`Drooling Level`, `Openness To Strangers`:`Mental Stimulation Needs`) %>% 
-  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
-  left_join(trait_groups) %>% 
-  select(rank, Breed, trait_group, trait, value) %>% 
-  arrange(rank, trait_group, trait) %>% 
-  group_by(rank, trait_group) %>% 
-  mutate(trait_group_score = sum(value),
-         n = n()) %>% 
-  mutate(score_100 = trait_group_score * 100 / (n * 5)) %>% 
-  select(rank:trait_group, trait_group_score = score_100) %>% 
-  slice(1) %>% 
-  ungroup()
+# Create table for top 10 breeds in 2020 ----
 
-# Create table ----
-
-ranks %>% 
-  filter(year == 2020) %>% 
-  head(10) %>% 
-  select(Image, RANK = rank, BREED = Breed) %>% 
+table <- dog_breeds %>% 
   gt() %>% 
-  gt_img_rows(Image)
+  cols_label(rank = "RANK",
+             Image = "",
+             Breed = "BREED",
+             `Coat Type` = "COAT TYPE",
+             `Coat Length` = "COAT LENGTH",
+             `Family Life` = "FAMILY LIFE",
+             Physical = "PHYSICAL",
+             Social = "SOCIAL",
+             Personality = "PERSONALITY") %>% 
+  gt_img_rows(Image) %>% 
+  gt_color_rows(rank, palette = "ggsci::blue_material") %>% 
+  gt_merge_stack(col1 = Breed, col2 = group) %>% 
+  gt_plt_bar_pct(column = `Family Life`, scaled = TRUE,
+                 fill = "blue", background = "lightblue") %>% 
+  gt_plt_bar_pct(column = Physical, scaled = TRUE,
+                 fill = "green", background = "lightgreen") %>% 
+  gt_plt_bar_pct(column = Social, scaled = TRUE,
+                 fill = "purple", background = "#e1e1e1") %>% 
+  gt_plt_bar_pct(column = Personality, scaled = TRUE,
+                 fill = "goldenrod", background = "gold") %>% 
+  cols_align(align = "center") %>% 
+  cols_width(Image ~ px(75),
+             `Coat Type` ~ px(150),
+             `Coat Length` ~ px(150),
+             `Family Life` ~ px(100),
+             Physical ~ px(100),
+             Social ~ px(100),
+             Personality ~ px(100)) %>% 
+  tab_header(title = "Top 10 Dog Breeds in 2020") %>% 
+  opt_align_table_header(align = "center") %>% 
+  tab_source_note(source_note = "Source: American Kennel Club") %>% 
+  tab_source_note(source_note = "@KittJonathan")
 
-team_df <- readRDS(url("https://github.com/nflverse/nflfastR-data/raw/master/teams_colors_logos.rds"))
-
-team_df %>%
-  dplyr::select(team_nick, team_abbr, team_conf, team_division, team_wordmark) %>%
-  head(8) %>%
-  gt(groupname_col = "team_conf") %>%
-  gt_merge_stack(col1 = team_nick, col2 = team_division) %>%
-  gt_img_rows(team_wordmark)
-  
-
-# Top 10 breeds overall
-
-top10_ranks <- ranks %>% 
-  select(Breed, overall_rank) %>% 
-  arrange(overall_rank) %>% 
-  group_by(Breed) %>% 
-  filter(row_number() == 1) %>% 
-  head(10) %>% 
-  pull(Breed)
-
-top10 <- ranks %>% 
-  filter(Breed %in% top10_ranks) %>% 
-  arrange(overall_rank)
-
-top20 %>% 
-  group_by(Breed) %>% 
-  summarise(ranks = list(rank), .groups = "drop") %>% 
-  gt() %>% 
-  gt_sparkline(ranks)
-
-
-# Clean traits dataset
-# Add rank variable
-# Keep numeric variables
-# Transform to long format
-# Add trait group information
-
-traits <- breed_traits %>% 
-  add_column(rank = 1:nrow(.), .before = "Breed") %>% 
-  select(-c(`Coat Type`, `Coat Length`)) %>% 
-  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
-  mutate(trait_group = case_when(trait %in% c("Affectionate With Family",
-                                              "Good With Young Children",
-                                              "Good With Other Dogs") ~ "Family Life",
-                                 trait %in% c("Shedding Level",
-                                              "Coat Grooming Frequency",
-                                              "Drooling Level") ~ "Physical",
-                                 trait %in% c("Openness To Strangers",
-                                              "Playfulness Level",
-                                              "Watchdog/Protective Nature",
-                                              "Adaptability Level") ~ "Social",
-                                 trait %in% c("Trainability Level",
-                                              "Energy Level",
-                                              "Barking Level",
-                                              "Mental Stimulation Needs") ~ "Personality")) %>% 
-  select(rank, Breed, trait_group, trait, value) %>% 
-  mutate(Breed = factor(Breed, levels = unique(Breed)),
-         trait_group = factor(trait_group, levels = unique(trait_group)),
-         trait = factor(trait, levels = unique(trait)))
-
-ggplot(data = traits, 
-       mapping = aes(y = Breed, x = trait,
-                     colour = value)) +
-  geom_point()
-  
-
-# Create traits groups
-trait_groups <- trait_description %>% 
-  mutate(trait_group = c(rep("Family Life", 3),
-                         rep("Physical", 5),
-                         rep("Social", 4),
-                         rep("Personality", 4))) %>% 
-  select(trait_group, trait = Trait)
-
-# Add rank column in traits dataset (order corresponds to the 2020 ranks)
-# Transform to long format
-# Add trait group information and rearrange table
-# Calculate total score for each trait group / 100
-# Keep 1 row per group
-traits_scores <- breed_traits %>% 
-  add_column(rank = 1:nrow(.), .before = "Breed") %>% 
-  select(rank:`Drooling Level`, `Openness To Strangers`:`Mental Stimulation Needs`) %>% 
-  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
-  left_join(trait_groups) %>% 
-  select(rank, Breed, trait_group, trait, value) %>% 
-  arrange(rank, trait_group, trait) %>% 
-  group_by(rank, trait_group) %>% 
-  mutate(trait_group_score = sum(value),
-         n = n()) %>% 
-  mutate(score_100 = trait_group_score * 100 / (n * 5)) %>% 
-  select(rank:trait_group, trait_group_score = score_100) %>% 
-  slice(1) %>% 
-  ungroup()
-  
-
-
-# Clean details dataset : 
-# 1) keep games published from 1950 onwards
-# 1) count number of expansions per game
-# 2) select columns
-
-details <- details %>% 
-  filter(yearpublished >= 1950) %>% 
-  mutate(nb_expansions = ifelse(is.na(boardgameexpansion), 0,
-                                lengths(str_split(boardgameexpansion, ",")))) %>% 
-  select(id, name = primary, year = yearpublished, owned, nb_expansions,
-         min_players = minplayers, max_players = maxplayers, playing_time = playingtime,
-         min_play_time = minplaytime, max_play_time = maxplaytime,
-         min_age = minage, category = boardgamecategory,
-         mechanic = boardgamemechanic,
-         designer = boardgamedesigner, artist = boardgameartist)
-
-# Clean ratings dataset : select columns
-
-ratings <- ratings %>% 
-  filter(id %in% details$id) %>% 
-  select(id, rank:users_rated, thumbnail)
-
-# Create categories dataset :
-# 1) remove games w/o category
-# 2) select columns
-# 3) remove "[" and "]" from strings
-# 4) count number of categories per game
-# 5) split categories into separate columns
-# 6) transform into long format using pivot_longer
-
-categories <- details %>% 
-  filter(!is.na(category)) %>% 
-  select(id, category) %>% 
-  mutate(category = str_sub(category, 2, -2)) %>% 
-  mutate(nb_categories = ifelse(is.na(category), 0,
-                                lengths(str_split(category, ",")))) %>% 
-  separate(category, paste0("cat", 1:max(.$nb_categories)), ",") %>% 
-  select(-nb_categories) %>% 
-  pivot_longer(!id, names_to = "category", values_drop_na = TRUE) %>% 
-  select(id, category = value) %>% 
-  mutate(category = parse_character(category, trim_ws = TRUE)) %>% 
-  mutate(category = str_sub(category, 2, -2))
-
-# Create mechanics dataset :
-# 1) remove games w/o mechanic
-# 2) select columns
-# 3) remove "[" and "]" from strings
-# 4) count number of mechanics per game
-# 5) split mechanics into separate columns
-# 6) transform into long format using pivot_longer
-
-mechanics <- details %>% 
-  filter(!is.na(category)) %>% 
-  select(id, mechanic) %>% 
-  mutate(mechanic = str_sub(mechanic, 2, -2)) %>% 
-  mutate(nb_mechanics = ifelse(is.na(mechanic), 0,
-                                lengths(str_split(mechanic, ",")))) %>% 
-  separate(mechanic, paste0("mech", 1:max(.$nb_mechanics)), ",") %>% 
-  select(-nb_mechanics) %>% 
-  pivot_longer(!id, names_to = "mechanic", values_drop_na = TRUE) %>% 
-  select(id, mechanic = value) %>% 
-  mutate(mechanic = parse_character(mechanic, trim_ws = TRUE)) %>% 
-  mutate(mechanic = str_sub(mechanic, 2, -2))
-
-# Finish cleaning details dataset :
-# 1) count number of categories, mechanics, designers & artists for each game
-# 1) remove category, mechanic, designer & artist columns
-# 2) add columns with counts for each of the removed columns
-
-count_categories <- categories %>% 
-  count(id) %>% 
-  select(id, nb_categories = n)
-
-count_mechanics <- mechanics %>% 
-  count(id) %>% 
-  select(id, nb_mechanics = n)
-
-details <- details %>% 
-  select(id:min_age) %>% 
-  left_join(count_categories) %>% 
-  left_join(count_mechanics)
-
-# Join details and ratings
-games <- details %>% 
-  left_join(ratings)
-
-# Clear global environment
-rm(count_categories, count_mechanics,
-   details, ratings)
-
-# New games ----
-
-d1 <- games %>% 
-  filter(year >= 1950 & year <= 2021) %>% 
-  count(year)
-  
-
-p1 <- ggplot(d1, aes(x = year, y = n)) +
-  geom_line(colour = "firebrick", size = 2) +
-  ggtitle("New games") +
-  labs(x = "Year", y = "Number of games") +
-  theme_minimal() +
-  theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(family = "poiret", colour = "white", size = 20),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
-        plot.background = element_rect(fill = "#292929", colour = NA),
-        panel.background = element_rect(fill = "#292929", colour = NA))
-
-# Game categories ----
-
-d2 <- categories %>% 
-  count(category, sort = TRUE) %>% 
-  head(5) %>% 
-  mutate(pct = round(n / sum(n) * 100)) %>% 
-  mutate(category = fct_reorder(category, n))
-
-p2 <- ggplot(d2, mapping = aes(x = pct, y = category, fill = category)) +
-  geom_col(show.legend = FALSE) +
-  ggtitle("Top 5 categories (%)") +
-  scale_fill_manual(values = c("#836AA6", "#F299B1",
-                               "#F2E291", "#A67C2E", "#F29985")) +
-  theme_minimal() +
-  theme(axis.title = element_blank(),
-        axis.text = element_text(family = "poiret", size = 20, colour = "white"),
-        axis.text.y = element_text(margin = margin(0, -5, 0, 10)),
-        panel.background = element_rect(fill = "#292929", colour = NA),
-        plot.background = element_rect(fill = "#292929", colour = NA),
-        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
-        panel.grid.minor = element_blank(),
-        panel.grid.major.y = element_blank(),
-        panel.grid.major.x = element_line(colour = "grey30"))
-
-# Game complexity ----
-
-d3 <- games %>% 
-  select(id, name, min_age, nb_mechanics) %>% 
-  filter(!is.na(nb_mechanics)) %>% 
-  group_by(nb_mechanics) %>% 
-  summarise(mean = mean(min_age))
-
-p3 <- ggplot(d3, aes(x = nb_mechanics, y = mean)) +
-  geom_smooth(se = FALSE, size = 2, colour = "royalblue2") +
-  ggtitle("Complexity") +
-  labs(x = "Number of mechanics", y = "Minimum age") +
-  xlim(c(1, 22)) +
-  scale_y_continuous(breaks = c(9, 11, 13)) +
-  theme_minimal() +
-  theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(family = "poiret", colour = "white", size = 20),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5,
-                                  margin = margin(c(20, 0, 25, 0))),
-        plot.background = element_rect(fill = "#292929", colour = NA),
-        panel.background = element_rect(fill = "#292929", colour = NA))
-
-
-# Game duration ----
-
-d4 <- games %>% 
-  select(id, name, playing_time, average, bayes_average) %>% 
-  group_by(playing_time) %>% 
-  summarise(mean = mean(average)) %>% 
-  filter(playing_time <= 300)
-
-
-p4 <- ggplot(d4, aes(x = playing_time / 60, y = mean)) +
-  geom_smooth(se = FALSE, size = 3, colour = "#077643") +
-  ggtitle("Duration") +
-  labs(x = "Hours", y = "Rating") +
-  scale_y_continuous(breaks = c(6.5, 7)) +
-  theme_minimal() +
-  theme(axis.title.x = element_text(family = "poiret", colour = "white",size = 25, margin = margin(c(20, 0, 20, 0))),
-        axis.title.y = element_text(family = "poiret", colour = "white", size = 25, margin = margin(c(0, 20, 0, 20))),
-        axis.text = element_text(family = "poiret", colour = "white", size = 20),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_line(colour = "grey30"),
-        plot.title = element_text(family = "bangers", colour = "white", size = 25, hjust = 0.5, margin = margin(c(20, 0, 25, 0))),
-        plot.background = element_rect(fill = "#292929", colour = NA),
-        panel.background = element_rect(fill = "#292929", colour = NA))
-
-# Create dataviz ----
-
-board_games <- (p1 + p2) / (p3 + p4) +
-  plot_annotation(title = "Board games since 1950",
-                  caption = "Source : Board Game Geek, Graphic : Jonathan Kitt",
-                  theme = theme(plot.title = element_text(size = 50, colour = "white",
-                                                          family = "bangers", hjust = 0.5,
-                                                          margin = margin(20, 0, 25, 0)),
-                                plot.caption = element_text(size = 15, colour = "white", hjust = 1,
-                                                            family = "poiret"),
-                                plot.background = element_rect(fill = "#292929", colour = NA))) 
-
-ggsave("figs/2022_01_25_boardgames.png", board_games,
-       width = 1920/72, height = 1080/72, dpi = 72)
+table
