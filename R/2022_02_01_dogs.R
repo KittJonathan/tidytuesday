@@ -54,18 +54,18 @@ ranks <- breed_rank %>%
   mutate(overall_rank = sum(rank)) %>% 
   ungroup()
 
-# Top 20 breeds overall
+# Top 10 breeds overall
 
-top20_ranks <- ranks %>% 
+top10_ranks <- ranks %>% 
   select(Breed, overall_rank) %>% 
   arrange(overall_rank) %>% 
   group_by(Breed) %>% 
   filter(row_number() == 1) %>% 
-  head(20) %>% 
+  head(10) %>% 
   pull(Breed)
 
-top20 <- ranks %>% 
-  filter(Breed %in% top20_ranks) %>% 
+top10 <- ranks %>% 
+  filter(Breed %in% top10_ranks) %>% 
   arrange(overall_rank)
 
 top20 %>% 
