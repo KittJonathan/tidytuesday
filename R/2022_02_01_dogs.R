@@ -27,11 +27,6 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Data wrangling ----
 
-# Extract links to thumbnails
-
-images <- breed_rank %>% 
-  select(Breed, Image)
-
 # Clean ranks
 
 ranks <- breed_rank %>% 
