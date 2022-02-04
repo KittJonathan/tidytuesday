@@ -11,11 +11,11 @@
 
 #library(patchwork)
 #library(showtext)
-library(broom)
+#library(broom)
 #library(janitor)
+library(gtExtras)
 library(tidytuesdayR)
 library(tidyverse)
-
 
 # Import fonts ----
 
@@ -30,19 +30,28 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Data wrangling ----
 
-# Extract data from links
+# Extract links to thumbnails
 
-# ".breed-page__intro__temperment
+images <- breed_rank %>% 
+  select(Breed, Image)
 
-url <- breed_rank$links[1]
-d1 <- rvest::read_html(url)
+# Clean ranks ----
 
-d1 %>% 
-  rvest::xml_nodes(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "bpm-my4", " " ))]')
+ranks <- breed_rank %>% 
+  select(Breed, 
+         rank_2013 = '2013 Rank',
+         rank_2014 = '2014 Rank',
+         rank_2015 = '2015 Rank',
+         rank_2016 = '2016 Rank',
+         rank_2017 = '2017 Rank',
+         rank_2018 = '2018 Rank',
+         rank_2019 = '2019 Rank',
+         rank_2020 = '2020 Rank') %>% 
+  pivot_longer(cols = -Breed, names_to = "year", values_to = "rank") %>% 
+  mutate(year = str_remove(year, "rank_")) %>% 
+  group_by(Breed) %>% 
+  mutate(overall_rank = sum(rank))
 
-d1 %>% rvest::html_element(".breed-page__no-page-margin")
-
-# //*[contains(concat( " ", @class, " " ), concat( " ", "bpm-my4", " " ))]
 
 # Clean traits dataset
 # Add rank variable
