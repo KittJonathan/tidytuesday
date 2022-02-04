@@ -36,7 +36,7 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 images <- breed_rank %>% 
   select(Breed, Image)
 
-# Clean ranks ----
+# Clean ranks
 
 ranks <- breed_rank %>% 
   select(Breed, 
@@ -52,7 +52,9 @@ ranks <- breed_rank %>%
   mutate(year = str_remove(year, "rank_")) %>% 
   mutate(year = factor(year, levels = 2013:2020))
 
-rm(breed_rank)
+# Clean traits 
+
+traits <- breed_traits
 
 # Create table ----
 
