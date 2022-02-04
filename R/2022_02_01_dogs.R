@@ -3,10 +3,6 @@
 # Dog breeds
 # https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-02-01/readme.md
 
-# Useful links ----
-
-# https://clauswilke.com/blog/2020/09/07/pca-tidyverse-style/
-
 # Load packages ----
 
 #library(patchwork)
