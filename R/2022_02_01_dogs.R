@@ -13,6 +13,7 @@
 #library(showtext)
 #library(broom)
 #library(janitor)
+library(gt)
 library(gtExtras)
 library(tidytuesdayR)
 library(tidyverse)
@@ -50,7 +51,29 @@ ranks <- breed_rank %>%
   pivot_longer(cols = -Breed, names_to = "year", values_to = "rank") %>% 
   mutate(year = str_remove(year, "rank_")) %>% 
   group_by(Breed) %>% 
-  mutate(overall_rank = sum(rank))
+  mutate(overall_rank = sum(rank)) %>% 
+  ungroup()
+
+# Top 20 breeds overall
+
+top20_ranks <- ranks %>% 
+  select(Breed, overall_rank) %>% 
+  arrange(overall_rank) %>% 
+  group_by(Breed) %>% 
+  filter(row_number() == 1) %>% 
+  head(20) %>% 
+  pull(Breed)
+
+top20 <- ranks %>% 
+  filter(Breed %in% top20_ranks) %>% 
+  arrange(overall_rank)
+  
+
+top20 %>% 
+  group_by(Breed) %>% 
+  summarise(ranks = list(rank), .groups = "drop") %>% 
+  gt() %>% 
+  gt_sparkline(ranks)
 
 
 # Clean traits dataset
