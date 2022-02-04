@@ -27,7 +27,7 @@ breed_rank <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience
 
 # Data wrangling ----
 
-# Clean ranks
+# Clean ranks and calculate rank evolution since 2013
 
 ranks <- breed_rank %>% 
   select(Breed, 
@@ -42,11 +42,82 @@ ranks <- breed_rank %>%
          rank_2020 = '2020 Rank') %>% 
   pivot_longer(cols = -c(Breed, Image), names_to = "year", values_to = "rank") %>% 
   mutate(year = str_remove(year, "rank_")) %>% 
-  mutate(year = factor(year, levels = 2013:2020))
+  mutate(year = factor(year, levels = 2013:2020)) %>% 
+  group_by(Breed) %>% 
+  mutate(rank_evolution = rank[year == 2013] - rank[year == 2020]) %>% 
+  filter(year == 2020) %>% 
+  select(rank, Breed, rank_evolution, Image) %>% 
+  mutate(rank_evolution = case_when(rank_evolution == 0 ~ "=",
+                                    rank_evolution > 0 ~ paste0("+", rank_evolution),
+                                    TRUE ~ as.character(rank_evolution)))
 
-# Clean traits 
+# Clean trait groups dataset with scores 
 
-traits <- breed_traits
+traits <- breed_traits %>% 
+  mutate(rank = 1:nrow(.)) %>% 
+  select(-c(`Coat Type`, `Coat Length`)) %>% 
+  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
+  mutate(trait_group = case_when(trait %in% c("Affectionate With Family",
+                                              "Good With Young Children",
+                                              "Good With Other Dogs") ~ "Family Life",
+                                 trait %in% c("Shedding Level",
+                                              "Coat Grooming Frequency",
+                                              "Drooling Level") ~ "Physical",
+                                 trait %in% c("Openness To Strangers",
+                                              "Playfulness Level",
+                                              "Watchdog/Protective Nature",
+                                              "Adaptability Level") ~ "Social",
+                                 trait %in% c("Trainability Level",
+                                              "Energy Level",
+                                              "Barking Level",
+                                              "Mental Stimulation Needs") ~ "Personality")) %>% 
+  select(rank, Breed, trait_group, trait, value) %>% 
+  mutate(Breed = factor(Breed, levels = unique(Breed)),
+         trait_group = factor(trait_group, levels = unique(trait_group)),
+         trait = factor(trait, levels = unique(trait))) %>% 
+  group_by(rank, trait_group) %>% 
+  mutate(trait_group_score = sum(value),
+         n = n()) %>% 
+  mutate(score_100 = trait_group_score * 100 / (n * 5)) %>% 
+  select(rank:trait_group, trait_group_score = score_100) %>% 
+  slice(1) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = trait_group, values_from = trait_group_score)
+
+# Extract coat type and coat length
+
+coat <- breed_traits %>% 
+  mutate(rank = 1:nrow(.)) %>% 
+  select(rank, Breed, `Coat Type`, `Coat Length`)
+
+# Join datasets
+
+dog_breeds <- ranks %>% 
+  left_join(coat, by = "rank") %>% 
+  left_join(traits, by = "rank") %>% 
+  select(rank, Image, Breed, rank_evolution, `Coat Type`, `Coat Length`,
+         `Family Life`, Physical, Social, Personality)
+
+# Clean global environment
+
+rm(breed_rank, breed_traits, coat, ranks, trait_description, traits)
+  
+  
+
+traits_scores <- breed_traits %>% 
+  add_column(rank = 1:nrow(.), .before = "Breed") %>% 
+  select(rank:`Drooling Level`, `Openness To Strangers`:`Mental Stimulation Needs`) %>% 
+  pivot_longer(cols = -c(rank, Breed), names_to = "trait", values_to = "value") %>% 
+  left_join(trait_groups) %>% 
+  select(rank, Breed, trait_group, trait, value) %>% 
+  arrange(rank, trait_group, trait) %>% 
+  group_by(rank, trait_group) %>% 
+  mutate(trait_group_score = sum(value),
+         n = n()) %>% 
+  mutate(score_100 = trait_group_score * 100 / (n * 5)) %>% 
+  select(rank:trait_group, trait_group_score = score_100) %>% 
+  slice(1) %>% 
+  ungroup()
 
 # Create table ----
 
