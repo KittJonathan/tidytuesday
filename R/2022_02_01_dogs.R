@@ -67,7 +67,6 @@ top20_ranks <- ranks %>%
 top20 <- ranks %>% 
   filter(Breed %in% top20_ranks) %>% 
   arrange(overall_rank)
-  
 
 top20 %>% 
   group_by(Breed) %>% 
