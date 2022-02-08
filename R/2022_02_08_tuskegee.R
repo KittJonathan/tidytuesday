@@ -7,6 +7,7 @@
 
 # library(gt)
 # library(gtExtras)
+library()
 library(tidytuesdayR)
 library(tidyverse)
 
@@ -22,6 +23,11 @@ rm(tuesdata)
 
 nb_pilots <- airmen %>% 
   count(state)
+
+# Create map of U.S. ----
+
+us_states <- map_data("state")
+
 
 ranks <- breed_rank %>% 
   select(Breed, 
