@@ -7,6 +7,7 @@
 
 # library(gt)
 # library(gtExtras)
+library(ggpubr)
 library(lubridate)
 library(tidytuesdayR)
 library(tidyverse)
@@ -46,15 +47,6 @@ graduates <- airmen %>%
   count(graduation_year) %>% 
   add_row(graduation_year = 1947, n = 0) %>% 
   arrange(graduation_year)
-
-timeline <- airmen %>% 
-  select(name, graduation_date) %>% 
-  filter(!is.na(graduation_date)) %>% 
-  arrange(graduation_date) %>% 
-  mutate(shorter_date = floor_date(graduation_date, "month")) %>% 
-  count(shorter_date)
-
-
 
 
 
