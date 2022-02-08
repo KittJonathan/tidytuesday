@@ -49,36 +49,6 @@ graduates <- airmen %>%
   arrange(graduation_year)
 
 
-
-# Add states names to airmen dataset
-
-states <- tibble(
-  state_name = state.name,
-  state_abb = state.abb) 
-
-airmen <- airmen %>% 
-  left_join(states, by = c("state" = "state_abb")) %>% 
-  mutate(state_name = tolower(state_name)) %>% 
-  mutate(state_name = case_when(
-    state == "In" ~ "indiana",
-    state == "DC" ~ "district of columbia",
-    state == "CN" ~ "connecticut",
-    state == "KN" ~ "kentucky",
-    TRUE ~ state_name)) %>% 
-  select(name:military_hometown_of_record, state = state_name, aerial_victory_credits:web_profile)
-
-
-# Count number of pilots per U.S. state and add state abbreviations
-
-states <- tibble(
-  name = state.name,
-  abb = state.abb
-)
-
-nb_pilots <- airmen %>% 
-  count(state) %>% 
-  left_join(states, by = c("state" = "abb"))
-
 # Create map of U.S. ----
 
 nb_pilots <- airmen %>% 
