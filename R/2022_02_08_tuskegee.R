@@ -19,7 +19,7 @@ rm(tuesdata)
 
 # Data wrangling ----
 
-# Count number of pilots per U.S. state
+# Count number of pilots per U.S. state and add state abbreviations
 
 nb_pilots <- airmen %>% 
   count(state)
