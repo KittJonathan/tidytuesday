@@ -18,7 +18,10 @@ rm(tuesdata)
 
 # Data wrangling ----
 
-# Clean ranks and calculate rank evolution since 2013
+# Count number of pilots per U.S. state
+
+nb_pilots <- airmen %>% 
+  count(state)
 
 ranks <- breed_rank %>% 
   select(Breed, 
