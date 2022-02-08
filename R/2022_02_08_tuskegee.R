@@ -5,9 +5,6 @@
 
 # Load packages ----
 
-# library(gt)
-# library(gtExtras)
-library(ggpubr)
 library(lubridate)
 library(tidytuesdayR)
 library(tidyverse)
@@ -34,7 +31,8 @@ states_pilots <- airmen %>%
     state == "KN" ~ "Kentucky",
     TRUE ~ state_name)) %>%
   filter(!is.na(state_name)) %>% 
-  count(state_name, sort = TRUE)
+  count(state_name, sort = TRUE) %>% 
+  mutate(state_name = tolower(state_name))
 
 rm(us_states)
 
@@ -48,16 +46,24 @@ graduates <- airmen %>%
   add_row(graduation_year = 1947, n = 0) %>% 
   arrange(graduation_year)
 
+# Create plots ----
 
-# Create map of U.S. ----
+us_map <- map_data("state") %>% 
+  left_join(states_pilots, 
+            by = c("region" = "state_name"))
 
-nb_pilots <- airmen %>% 
-  count(state)
-
-us_states <- map_data("state")
-
-us_map_data <- map_data("state") %>% 
-  left_join(nb_pilots, by = c("region" = "state"))
+ggplot(data = us_map,
+       mapping = aes(x = long,
+                     y = lat,
+                     group = group,
+                     fill = n)) +
+  geom_polygon(colour = "grey50") +
+  scale_fill_steps2(na.value = "white") +
+  ggtitle("Number of pilots for each U.S. state") +
+  theme_void() +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.margin = margin(r = 25))
 
 
 ggplot(data = us_map_data, 
