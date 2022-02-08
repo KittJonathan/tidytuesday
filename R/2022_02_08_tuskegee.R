@@ -7,7 +7,7 @@
 
 # library(gt)
 # library(gtExtras)
-library()
+library(lubridate)
 library(tidytuesdayR)
 library(tidyverse)
 
@@ -17,20 +17,64 @@ tuesdata <- tidytuesdayR::tt_load('2022-02-08')
 airmen <- tuesdata$airmen
 rm(tuesdata)
 
-# Data wrangling ----
+# How many pilots came from the different US states ? ----
 
-# Create tibble with US states names and codes
+us_states <- tibble(
+  state_name = state.name,
+  state_abb = state.abb)
+
+states_pilots <- airmen %>% 
+  select(name, state) %>% 
+  left_join(us_states, by = c("state" = "state_abb")) %>% 
+  mutate(state_name = case_when(
+    state == "In" ~ "Indiana",
+    state == "DC" ~ "District Of Columbia",
+    state == "CN" ~ "Connecticut",
+    state == "KN" ~ "Kentucky",
+    TRUE ~ state_name)) %>%
+  filter(!is.na(state_name)) %>% 
+  count(state_name, sort = TRUE)
+
+rm(us_states)
+
+# How many graduates per year ? ----
+
+graduates <- airmen %>%
+  select(name, graduation_date) %>%
+  filter(!is.na(graduation_date)) %>% 
+  mutate(graduation_year = year(graduation_date)) %>% 
+  count(graduation_year) %>% 
+  add_row(graduation_year = 1947, n = 0) %>% 
+  arrange(graduation_year)
+
+timeline <- airmen %>% 
+  select(name, graduation_date) %>% 
+  filter(!is.na(graduation_date)) %>% 
+  arrange(graduation_date) %>% 
+  mutate(shorter_date = floor_date(graduation_date, "month")) %>% 
+  count(shorter_date)
+
+
+
+
+
+# Add states names to airmen dataset
 
 states <- tibble(
-  name = state.name,
-  abb = state.abb) 
+  state_name = state.name,
+  state_abb = state.abb) 
 
-# Check for differences between states abbreviations in both datasets
-states_diff <- airmen %>% 
-  distinct(state) %>% 
-  filter(!is.na(state)) %>% 
-  filter(!state %in% states$abb) %>% 
-  pull(state)
+airmen <- airmen %>% 
+  left_join(states, by = c("state" = "state_abb")) %>% 
+  mutate(state_name = tolower(state_name)) %>% 
+  mutate(state_name = case_when(
+    state == "In" ~ "indiana",
+    state == "DC" ~ "district of columbia",
+    state == "CN" ~ "connecticut",
+    state == "KN" ~ "kentucky",
+    TRUE ~ state_name)) %>% 
+  select(name:military_hometown_of_record, state = state_name, aerial_victory_credits:web_profile)
+
 
 # Count number of pilots per U.S. state and add state abbreviations
 
@@ -45,7 +89,21 @@ nb_pilots <- airmen %>%
 
 # Create map of U.S. ----
 
+nb_pilots <- airmen %>% 
+  count(state)
+
 us_states <- map_data("state")
+
+us_map_data <- map_data("state") %>% 
+  left_join(nb_pilots, by = c("region" = "state"))
+
+
+ggplot(data = us_map_data, 
+       mapping = aes(x = long, 
+                     y = lat,
+                     group = group,
+                     fill = n)) +
+  geom_polygon(colour = "grey")
 
 
 ranks <- breed_rank %>% 
