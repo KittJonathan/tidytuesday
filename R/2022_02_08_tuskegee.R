@@ -19,10 +19,29 @@ rm(tuesdata)
 
 # Data wrangling ----
 
+# Create tibble with US states names and codes
+
+states <- tibble(
+  name = state.name,
+  abb = state.abb) 
+
+# Check for differences between states abbreviations in both datasets
+states_diff <- airmen %>% 
+  distinct(state) %>% 
+  filter(!is.na(state)) %>% 
+  filter(!state %in% states$abb) %>% 
+  pull(state)
+
 # Count number of pilots per U.S. state and add state abbreviations
 
+states <- tibble(
+  name = state.name,
+  abb = state.abb
+)
+
 nb_pilots <- airmen %>% 
-  count(state)
+  count(state) %>% 
+  left_join(states, by = c("state" = "abb"))
 
 # Create map of U.S. ----
 
