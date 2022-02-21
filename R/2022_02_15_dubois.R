@@ -26,11 +26,12 @@ illiteracy <- illiteracy %>%
 
 ggplot(data = illiteracy) +
   geom_col(mapping = aes(x = rate,
-                         y = year))
+                         y = year),
+           width = 1.5)
 
 ggplot(data = illiteracy) +
-  geom_col(mapping = aes(x = rate,
-                         y = rev(year)))
+  geom_segment(mapping = aes(x = rate_rev - 0.5, xend = rate_rev + 0.5,
+                             y = year_rev, yend = year_rev))
 
 
 us_states <- tibble(
