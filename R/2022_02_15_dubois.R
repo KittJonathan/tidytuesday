@@ -6,16 +6,29 @@
 
 library(lubridate)
 library(showtext)
-library(tidytuesdayR)
+#library(tidytuesdayR)
 library(tidyverse)
+library(janitor)
 
-# Import datasets ----
+# Import dataset ----
 
-tuesdata <- tidytuesdayR::tt_load('2022-02-08')
-airmen <- tuesdata$airmen
-rm(tuesdata)
+illiteracy <- read_csv('https://raw.githubusercontent.com/ajstarks/dubois-data-portraits/master/challenge/2022/challenge06/data.csv')
 
-# How many pilots came from the different US states ? ----
+# Clean dataset ----
+
+illiteracy <- illiteracy %>% 
+  clean_names()
+
+# Create plot ----
+
+ggplot(data = illiteracy) +
+  geom_col(mapping = aes(x = year,
+                         y = rate))
+
+ggplot(data = illiteracy) +
+  geom_col(mapping = aes(x = rate,
+                         y = year))
+
 
 us_states <- tibble(
   state_name = state.name,
