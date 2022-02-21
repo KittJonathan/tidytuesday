@@ -17,13 +17,14 @@ illiteracy <- read_csv('https://raw.githubusercontent.com/ajstarks/dubois-data-p
 # Clean dataset ----
 
 illiteracy <- illiteracy %>% 
-  clean_names()
+  rename(year = Date,
+         rate = `Iliteracy Rate`)
 
 # Create plot ----
 
 ggplot(data = illiteracy) +
-  geom_col(mapping = aes(x = year,
-                         y = rate))
+  geom_col(mapping = aes(x = rate,
+                         y = year))
 
 ggplot(data = illiteracy) +
   geom_col(mapping = aes(x = rate,
