@@ -18,7 +18,9 @@ illiteracy <- read_csv('https://raw.githubusercontent.com/ajstarks/dubois-data-p
 
 illiteracy <- illiteracy %>% 
   rename(year = Date,
-         rate = `Iliteracy Rate`)
+         rate = `Iliteracy Rate`) %>% 
+  mutate(year_labels = c("1860", "1870", "1880", "1890", "(1900?)"),
+         rate_labels = c("99%", "92%", "81.6%", "67.27%", "(50%?)"))
 
 # Create plot ----
 
@@ -28,7 +30,7 @@ ggplot(data = illiteracy) +
 
 ggplot(data = illiteracy) +
   geom_col(mapping = aes(x = rate,
-                         y = year))
+                         y = rev(year)))
 
 
 us_states <- tibble(
