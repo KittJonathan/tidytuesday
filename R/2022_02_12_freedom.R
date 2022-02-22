@@ -1,15 +1,14 @@
 # TidyTuesday challenge
-# Date : 2022-02-12
+# Date : 2022-02-22
 # Freedom in the world
 # https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-02-22/readme.md
+
 # Load packages ----
 
-#library(lubridate)
-library(showtext)
 library(patchwork)
+library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
-#library(janitor)
 
 # Import dataset ----
 
@@ -42,9 +41,7 @@ continent_status <- freedom %>%
   mutate(ymin = case_when(status == "non_free" ~ 1 - fraction,
                           TRUE ~ 0),
          ymax = case_when(status == "free" ~ fraction,
-                          TRUE ~ 1)) %>% 
-  mutate(alpha = case_when(status == "free" ~ 1,
-                           TRUE ~ 0))
+                          TRUE ~ 1))
 
 
 # Plots ----
@@ -56,7 +53,7 @@ europe_ring <- continent_status %>%
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
   theme_void() +
-  annotate("text", x = 0.05, y = 0, size = 12, label = "Europe", family = "space",
+  annotate("text", x = 0.05, y = 0, size = 15, label = "Europe", family = "space",
            colour = "#0081C8")
 
 africa_ring <- continent_status %>% 
@@ -66,7 +63,7 @@ africa_ring <- continent_status %>%
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
   theme_void() +
-  annotate("text", x = 0.05, y = 0, size = 12, label = "Africa", family = "space",
+  annotate("text", x = 0.05, y = 0, size = 15, label = "Africa", family = "space",
            colour = "#000000")
 
 americas_ring <- continent_status %>% 
@@ -76,7 +73,7 @@ americas_ring <- continent_status %>%
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
   theme_void() +
-  annotate("text", x = 0.05, y = 0, size = 12, label = "Americas", family = "space",
+  annotate("text", x = 0.05, y = 0, size = 15, label = "Americas", family = "space",
            colour = "#EE334E")
 
 asia_ring <- continent_status %>% 
@@ -86,7 +83,7 @@ asia_ring <- continent_status %>%
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
   theme_void() +
-  annotate("text", x = 0.05, y = 0, size = 12, label = "Asia", family = "space",
+  annotate("text", x = 0.05, y = 0, size = 15, label = "Asia", family = "space",
            colour = "#FCB131")
 
 oceania_ring <- continent_status %>% 
@@ -96,12 +93,18 @@ oceania_ring <- continent_status %>%
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
   theme_void() +
-  annotate("text", x = 0.05, y = 0, size = 12, label = "Oceania", family = "space",
+  annotate("text", x = 0.05, y = 0, size = 15, label = "Oceania", family = "space",
            colour = "#00A651")
 
-(europe_ring + africa_ring + americas_ring) / (asia_ring + oceania_ring) +
-  plot_layout(widths = c(1, 1, 1, 1, 1))
+p <- (europe_ring + africa_ring + americas_ring) / (asia_ring + oceania_ring) +
+  plot_layout(widths = c(1, 1, 1, 1, 1)) +
+  plot_annotation(title = "Freedom in the world",
+                  subtitle = "Proportion of free countries by continent in 2020",
+                  caption = "Data : Freedom House | Datavis : Jonathan Kitt",
+                  theme = theme(plot.title = element_text(hjust = 0.5, family = "space", size = 60),
+                                plot.subtitle = element_text(hjust = 0.5, family = "space", size = 50),
+                                plot.caption = element_text(hjust = 0.5, family = "space", size = 20)))
 
  # Save plot ----
 
-ggsave("figs/2022_02_08_tuskegee_airmen.png", p, dpi = 320, width = 12, height = 6)
+ggsave("figs/2022_02_22_freedom.png", p, dpi = 320, width = 12, height = 6)
