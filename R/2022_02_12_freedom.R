@@ -33,18 +33,18 @@ continent_status <- freedom %>%
   mutate(non_free_fraction = 1 - free_fraction) %>% 
   select(continent, free_fraction, non_free_fraction) %>% 
   pivot_longer(-continent, names_to = "status", values_to = "fraction") %>% 
-  mutate(status = str_remove(status, "_fraction"))
+  mutate(status = str_remove(status, "_fraction")) %>% 
+  group_by(continent) %>% 
+  mutate(ymin = case_when(status == "non_free" ~ 1 - fraction,
+                          TRUE ~ 0),
+         ymax = case_when(status == "free" ~ fraction,
+                          TRUE ~ 1))
 
-%>% 
-  mutate()
+
+# Plot ----
 
 europe <- continent_status %>% 
   filter(continent == "Europe")
-
-ggplot(data = europe,
-       mapping = aes(xmin = 0, ))
-
-# Plot ----
 
 # Create test data.
 data <- data.frame(
