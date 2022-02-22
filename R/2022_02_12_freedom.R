@@ -28,17 +28,55 @@ continent_status <- freedom %>%
   mutate(free_countries = sum(status == "F"),
          total = n()) %>% 
   filter(row_number() == 1) %>% 
-  select(continent, free_countries, total)
+  select(continent, free_countries, total) %>% 
+  mutate(free_fraction = free_countries / total) %>% 
+  mutate(non_free_fraction = 1 - free_fraction) %>% 
+  select(continent, free_fraction, non_free_fraction) %>% 
+  pivot_longer(-continent, names_to = "status", values_to = "fraction") %>% 
+  mutate(status = str_remove(status, "_fraction"))
 
-  summarise(total = n())
+%>% 
+  mutate()
 
-  group_by(Region_Name) %>% 
-  mutate(total = nrow(.))
-  
-  filter(year == 2020) %>% 
-  count(Region_Name, Status) %>% 
-  group_by(Region_Name) %>% 
-  mutate(status_pct = 100 * Status / sum(n))
+europe <- continent_status %>% 
+  filter(continent == "Europe")
+
+ggplot(data = europe,
+       mapping = aes(xmin = 0, ))
+
+# Plot ----
+
+# Create test data.
+data <- data.frame(
+  category=c("A", "B", "C"),
+  count=c(10, 60, 30)
+)
+
+# Compute percentages
+data$fraction <- data$count / sum(data$count)
+
+# Compute the cumulative percentages (top of each rectangle)
+data$ymax <- cumsum(data$fraction)
+
+# Compute the bottom of each rectangle
+data$ymin <- c(0, head(data$ymax, n=-1))
+
+# Compute label position
+data$labelPosition <- (data$ymax + data$ymin) / 2
+
+# Compute a good label
+data$label <- paste0(data$category, "\n value: ", data$count)
+
+# Make the plot
+ggplot(data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=category)) +
+  geom_rect() +
+  geom_label( x=3.5, aes(y=labelPosition, label=label), size=6) +
+  scale_fill_brewer(palette=4) +
+  coord_polar(theta="y") +
+  xlim(c(2, 4)) +
+  theme_void() +
+  theme(legend.position = "none")
+
 
 # Map ----
 
