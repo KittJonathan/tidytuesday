@@ -5,7 +5,7 @@
 # Load packages ----
 
 #library(lubridate)
-#library(showtext)
+library(showtext)
 library(patchwork)
 library(tidytuesdayR)
 library(tidyverse)
@@ -18,7 +18,10 @@ freedom <- tuesdata$freedom
 
 rm(tuesdata)
 
-illiteracy <- read_csv('https://raw.githubusercontent.com/ajstarks/dubois-data-portraits/master/challenge/2022/challenge06/data.csv')
+# Load fonts ----
+
+font_add_google(name = "Space Mono", family = "space")
+showtext_auto()
 
 # Number of "free" countries in 2020 per continent ----
 
@@ -39,62 +42,65 @@ continent_status <- freedom %>%
   mutate(ymin = case_when(status == "non_free" ~ 1 - fraction,
                           TRUE ~ 0),
          ymax = case_when(status == "free" ~ fraction,
-                          TRUE ~ 1))
+                          TRUE ~ 1)) %>% 
+  mutate(alpha = case_when(status == "free" ~ 1,
+                           TRUE ~ 0))
 
 
 # Plots ----
 
 europe_ring <- continent_status %>% 
   filter(continent == "Europe") %>% 
-  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
-                       fill = status)) +
-  geom_rect(show.legend = FALSE) +
-  scale_fill_manual(values = c("#0081C8", "antiquewhite")) +
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax, alpha = rev(status))) +
+  geom_rect(show.legend = FALSE, fill = "#0081C8") +
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
-  theme_void()
+  theme_void() +
+  annotate("text", x = 0.05, y = 0, size = 12, label = "Europe", family = "space",
+           colour = "#0081C8")
 
 africa_ring <- continent_status %>% 
   filter(continent == "Africa") %>% 
-  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
-                       fill = status)) +
-  geom_rect(show.legend = FALSE) +
-  scale_fill_manual(values = c("#000000", "antiquewhite")) +
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax, alpha = rev(status))) +
+  geom_rect(show.legend = FALSE, fill = "#000000") +
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
-  theme_void()
+  theme_void() +
+  annotate("text", x = 0.05, y = 0, size = 12, label = "Africa", family = "space",
+           colour = "#000000")
 
 americas_ring <- continent_status %>% 
   filter(continent == "Americas") %>% 
-  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
-                       fill = status)) +
-  geom_rect(show.legend = FALSE) +
-  scale_fill_manual(values = c("#EE334E", "antiquewhite")) +
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax, alpha = rev(status))) +
+  geom_rect(show.legend = FALSE, fill = "#EE334E") +
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
-  theme_void()
+  theme_void() +
+  annotate("text", x = 0.05, y = 0, size = 12, label = "Americas", family = "space",
+           colour = "#EE334E")
 
 asia_ring <- continent_status %>% 
   filter(continent == "Asia") %>% 
-  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
-                       fill = status)) +
-  geom_rect(show.legend = FALSE) +
-  scale_fill_manual(values = c("#FCB131", "antiquewhite")) +
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax, alpha = rev(status))) +
+  geom_rect(show.legend = FALSE, fill = "#FCB131") +
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
-  theme_void()
+  theme_void() +
+  annotate("text", x = 0.05, y = 0, size = 12, label = "Asia", family = "space",
+           colour = "#FCB131")
 
 oceania_ring <- continent_status %>% 
   filter(continent == "Oceania") %>% 
-  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
-                       fill = status)) +
-  geom_rect(show.legend = FALSE) +
-  scale_fill_manual(values = c("#00A651", "antiquewhite")) +
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax, alpha = rev(status))) +
+  geom_rect(show.legend = FALSE, fill = "#00A651") +
   coord_polar(theta = "y") +
   xlim(c(0.05, 4)) +
-  theme_void()
+  theme_void() +
+  annotate("text", x = 0.05, y = 0, size = 12, label = "Oceania", family = "space",
+           colour = "#00A651")
 
-(europe_ring + africa_ring + americas_ring) / (asia_ring + oceania_ring)
+(europe_ring + africa_ring + americas_ring) / (asia_ring + oceania_ring) +
+  plot_layout(widths = c(1, 1, 1, 1, 1))
 
  # Save plot ----
 
