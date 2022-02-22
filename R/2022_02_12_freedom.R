@@ -6,6 +6,7 @@
 
 #library(lubridate)
 #library(showtext)
+library(patchwork)
 library(tidytuesdayR)
 library(tidyverse)
 #library(janitor)
@@ -41,48 +42,60 @@ continent_status <- freedom %>%
                           TRUE ~ 1))
 
 
-# Plot ----
+# Plots ----
 
-europe <- continent_status %>% 
-  filter(continent == "Europe")
+europe_ring <- continent_status %>% 
+  filter(continent == "Europe") %>% 
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
+                       fill = status)) +
+  geom_rect(show.legend = FALSE) +
+  scale_fill_manual(values = c("#0081C8", "antiquewhite")) +
+  coord_polar(theta = "y") +
+  xlim(c(0.05, 4)) +
+  theme_void()
 
-# Create test data.
-data <- data.frame(
-  category=c("A", "B", "C"),
-  count=c(10, 60, 30)
-)
+africa_ring <- continent_status %>% 
+  filter(continent == "Africa") %>% 
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
+                       fill = status)) +
+  geom_rect(show.legend = FALSE) +
+  scale_fill_manual(values = c("#000000", "antiquewhite")) +
+  coord_polar(theta = "y") +
+  xlim(c(0.05, 4)) +
+  theme_void()
 
-# Compute percentages
-data$fraction <- data$count / sum(data$count)
+americas_ring <- continent_status %>% 
+  filter(continent == "Americas") %>% 
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
+                       fill = status)) +
+  geom_rect(show.legend = FALSE) +
+  scale_fill_manual(values = c("#EE334E", "antiquewhite")) +
+  coord_polar(theta = "y") +
+  xlim(c(0.05, 4)) +
+  theme_void()
 
-# Compute the cumulative percentages (top of each rectangle)
-data$ymax <- cumsum(data$fraction)
+asia_ring <- continent_status %>% 
+  filter(continent == "Asia") %>% 
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
+                       fill = status)) +
+  geom_rect(show.legend = FALSE) +
+  scale_fill_manual(values = c("#FCB131", "antiquewhite")) +
+  coord_polar(theta = "y") +
+  xlim(c(0.05, 4)) +
+  theme_void()
 
-# Compute the bottom of each rectangle
-data$ymin <- c(0, head(data$ymax, n=-1))
+oceania_ring <- continent_status %>% 
+  filter(continent == "Oceania") %>% 
+  ggplot(mapping = aes(xmin = 3, xmax = 4, ymin = ymin, ymax = ymax,
+                       fill = status)) +
+  geom_rect(show.legend = FALSE) +
+  scale_fill_manual(values = c("#00A651", "antiquewhite")) +
+  coord_polar(theta = "y") +
+  xlim(c(0.05, 4)) +
+  theme_void()
 
-# Compute label position
-data$labelPosition <- (data$ymax + data$ymin) / 2
+(europe_ring + africa_ring + americas_ring) / (asia_ring + oceania_ring)
 
-# Compute a good label
-data$label <- paste0(data$category, "\n value: ", data$count)
-
-# Make the plot
-ggplot(data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=category)) +
-  geom_rect() +
-  geom_label( x=3.5, aes(y=labelPosition, label=label), size=6) +
-  scale_fill_brewer(palette=4) +
-  coord_polar(theta="y") +
-  xlim(c(2, 4)) +
-  theme_void() +
-  theme(legend.position = "none")
-
-
-# Map ----
-
-world <- map_data("world") %>% 
-  dplyr::filter(region != "Antarctica")
-
-# Save plot ----
+ # Save plot ----
 
 ggsave("figs/2022_02_08_tuskegee_airmen.png", p, dpi = 320, width = 12, height = 6)
