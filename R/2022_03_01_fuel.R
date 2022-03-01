@@ -7,7 +7,8 @@
 # Load packages ----
 
 #library(patchwork)
-#library(showtext)
+library(janitor)
+library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
 
@@ -23,7 +24,56 @@ rm(tuesdata)
 font_add_google(name = "Space Mono", family = "space")
 showtext_auto()
 
-# Number of "free" countries in 2020 per continent ----
+# Clean dataset ----
+
+us_states <- tibble(
+  state_name = state.name,
+  state_abb = state.abb)
+
+d1 <- stations %>% 
+  filter(STATUS_CODE == "E") %>% 
+  select(STATE,
+         FUEL_TYPE_CODE) %>% 
+  janitor::clean_names() %>%
+  mutate(fuel_type_code = case_when(fuel_type_code == "BD" ~ "Biodiesel",
+                                    fuel_type_code == "CNG" ~ "Compressed Natural Gas",
+                                    fuel_type_code == "ELEC" ~ "Electric",
+                                    fuel_type_code == "E85" ~ "Ethanol",
+                                    fuel_type_code == "HY" ~ "Hydrogen",
+                                    fuel_type_code == "LNG" ~ "Liquified Natural Gas",
+                                    fuel_type_code == "LPG" ~ "Propane")) %>% 
+  left_join(us_states, by = c("state" = "state_abb")) %>% 
+  mutate(state_name = case_when(state == "DC" ~ "District of Columbia",
+                                TRUE ~ state_name)) %>% 
+  filter(!is.na(state_name)) %>% 
+  mutate(state_name = tolower(state_name)) %>% 
+  count(state_name, fuel_type_code)
+
+# Create map ----
+
+us_map <- map_data("state") 
+
+ggplot() +
+  geom_polygon(data = us_map,
+               mapping = aes(x = long, y = lat, group = group),
+               colour = "white", fill = "white") +
+  geom_point(data = d1,
+             mapping = aes(x = longitude, y = latitude,
+                           colour = fuel_type))
+
+ggplot(data = us_map,
+       mapping = aes(x = long, y = lat, group = group)) +
+  geom_polygon(colour = 'white')
+
+%>% 
+  left_join(states_pilots, 
+            by = c("region" = "state_name"))
+
+us_states <- tibble(
+  state_name = state.name,
+  state_abb = state.abb,
+  centroid.x = state.center$x,
+  centroid.y = state.center$y)
 
 continent_status <- freedom %>% 
   filter(year == 2020) %>% 
