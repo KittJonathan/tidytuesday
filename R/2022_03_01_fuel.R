@@ -30,24 +30,15 @@ us_states <- tibble(
   state_name = state.name,
   state_abb = state.abb)
 
-d1 <- stations %>% 
-  filter(STATUS_CODE == "E") %>% 
-  select(STATE,
-         FUEL_TYPE_CODE) %>% 
-  janitor::clean_names() %>%
-  mutate(fuel_type_code = case_when(fuel_type_code == "BD" ~ "Biodiesel",
-                                    fuel_type_code == "CNG" ~ "Compressed Natural Gas",
-                                    fuel_type_code == "ELEC" ~ "Electric",
-                                    fuel_type_code == "E85" ~ "Ethanol",
-                                    fuel_type_code == "HY" ~ "Hydrogen",
-                                    fuel_type_code == "LNG" ~ "Liquified Natural Gas",
-                                    fuel_type_code == "LPG" ~ "Propane")) %>% 
-  left_join(us_states, by = c("state" = "state_abb")) %>% 
-  mutate(state_name = case_when(state == "DC" ~ "District of Columbia",
+electric_stations <- stations %>% 
+  filter(STATUS_CODE == "E" & FUEL_TYPE_CODE == "ELEC") %>% 
+  count(STATE) %>% 
+  rename(state_abb = STATE, total = n) %>% 
+  left_join(us_states) %>% 
+  mutate(state_name = case_when(state_abb == "DC" ~ "District of Columbia",
                                 TRUE ~ state_name)) %>% 
-  filter(!is.na(state_name)) %>% 
   mutate(state_name = tolower(state_name)) %>% 
-  count(state_name, fuel_type_code)
+  select(state_name, state_abb, total)
 
 # Create map ----
 
