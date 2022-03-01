@@ -42,12 +42,14 @@ electric_stations <- stations %>%
 
 # Create map ----
 
-us_map <- map_data("state") 
+us_electric_stations <- map_data("state") %>% 
+  left_join(electric_stations, by = c("region" = "state_name"))
 
-ggplot() +
-  geom_polygon(data = us_map,
-               mapping = aes(x = long, y = lat, group = group),
-               colour = "white", fill = "white") +
+ggplot(data = us_electric_stations,
+       mapping = aes(x = long, y = lat, group = group,
+                     fill = total)) +
+  geom_polygon()
+
   geom_point(data = d1,
              mapping = aes(x = longitude, y = latitude,
                            colour = fuel_type))
