@@ -30,20 +30,27 @@ us_states <- tibble(
   state_name = state.name,
   state_abb = state.abb)
 
-electric_stations <- stations %>% 
-  filter(STATUS_CODE == "E" & FUEL_TYPE_CODE == "ELEC") %>% 
-  count(STATE) %>% 
-  rename(state_abb = STATE, total = n) %>% 
+d1 <- stations %>% 
+  filter(STATUS_CODE == "E") %>% 
+  count(STATE, FUEL_TYPE_CODE) %>% 
+  rename(state_abb = STATE, fuel_type = FUEL_TYPE_CODE, total = n) %>% 
+  mutate(fuel_type = case_when(fuel_type == "BD" ~ "Biodiesel",
+                               fuel_type == "CNG" ~ "Compressed Natural Gas",
+                               fuel_type == "ELEC" ~ "Electric",
+                               fuel_type == "E85" ~ "Ethanol",
+                               fuel_type == "HY" ~ "Hydrogen",
+                               fuel_type == "LNG" ~ "Liquified Natural Gas",
+                               fuel_type == "LPG" ~ "Propane")) %>% 
   left_join(us_states) %>% 
   mutate(state_name = case_when(state_abb == "DC" ~ "District of Columbia",
                                 TRUE ~ state_name)) %>% 
   mutate(state_name = tolower(state_name)) %>% 
-  select(state_name, state_abb, total)
+  select(state_name, fuel_type, total)
 
 # Create map ----
 
-us_electric_stations <- map_data("state") %>% 
-  left_join(electric_stations, by = c("region" = "state_name"))
+us_stations <- map_data("state") %>% 
+  left_join(stations, by = c("region" = "state_name"))
 
 ggplot(data = us_electric_stations,
        mapping = aes(x = long, y = lat, group = group,
