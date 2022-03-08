@@ -9,6 +9,7 @@
 library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
+library(ggflags)
 # library(countrycode)
 
 # Import dataset ----
@@ -20,7 +21,7 @@ rm(tuesdata)
 
 # Load fonts ----
 
-font_add_google(name = "Space Mono", family = "space")
+font_add_google(name = "Comfortaa", family = "Comfortaa")
 showtext_auto()
 
 # Data wrangling ----
@@ -29,7 +30,8 @@ country_codes <- countrycode::codelist %>%
   select(iso2c, country_name = country.name.en)
 
 d1 <- erasmus %>% 
-  filter(receiving_country_code != sending_country_code) %>%  # keep mobilities between different countries
+  filter(participant_nationality == "FR",  # keep data for french students
+         receiving_country_code != "FR") %>%  # keep mobilities abroad
   select(receiving_country_code, participants) %>%   # remove unwanted columns
   left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>%  # add sending country name
   mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",  # add missing country names 
@@ -41,94 +43,37 @@ d1 <- erasmus %>%
   filter(row_number() == 1) %>%  # keep 1 row by receiving country
   arrange(desc(total)) %>%   # arrange data by descending order
   ungroup() %>%  # ungroup data
-  mutate(percent = 100 * total / sum(total))  # calculate ratio
+  mutate(percent = 100 * total / sum(total)) %>%   # calculate ratio
+  mutate(country_name = factor(country_name, levels = rev(country_name))) %>%  # set levels %>% 
+  head(10)  # keep top 10 destinations
 
-d2 <- erasmus %>% 
-  filter(receiving_country_code != sending_country_code) %>%  # keep mobilities between different countries
-  select(receiving_country_code, participants) %>%   # remove unwanted columns
-  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>%  # add sending country name
-  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",  # add missing country names 
-                                  receiving_country_code == "UK" ~ "United Kingdom",
-                                  TRUE ~ country_name)) %>% 
-  count(country_name, sort = TRUE)
+# Create plot ----
 
+p <- ggplot(data = d1,
+       aes(x = country_name, y = total, fill = country_name)) +
+  geom_bar(width = 0.9, stat = "identity", show.legend = FALSE) +
+  scale_fill_manual(values = rep(c("#3caea3", "#173f5f"), 5)) +
+  #scale_fill_manual(values = rev(rainbow(10))) +
+  # scale_fill_manual(values = c("#9999ff", "#7d7fe2", "#6066c6", "#444eaa", "#23388f",
+  #                              "#002275", "#000f5c", "#000044", "#00032c", "#000117")) +
+  coord_polar(theta = "y", start = 0) +
+  xlab("") +
+  ylab("") +
+  geom_text(aes(x = country_name, y = 0, label = paste0(country_name, " - ", round(percent, digits = 1), " %")),
+            hjust = 1.05, family = "Comfortaa", size = 10, colour = rep(c("#173f5f", "#3caea3"), 5)) +
+  ggtitle(label = "Where do french students prefer to go ?",
+          subtitle = "Top 10 destinations for french ERASMUS participants") +
+  ylim(c(0, 250)) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "#d6ecef", colour = "#d6ecef"),
+        panel.background = element_rect(fill = "#d6ecef", colour = "#d6ecef"),
+        plot.title = element_text(family = "Comfortaa", size = 60, colour = "#173f5f", hjust = 0.5,
+                                  margin = margin(t = 20)),
+        plot.subtitle = element_text(family = "Comfortaa", size = 30, colour = "#173f5f", hjust = 0.5))
 
-d1 %>% filter(is.na(country_name)) %>% distinct(receiving_country_code)
+# Save plot ----
 
-clean_erasmus <- erasmus %>% 
-  filter(mobility_duration >= 7) %>% 
-  select(receiving_country_code, partic)
-
-
-
-
-countries <- erasmus %>% 
-  select(receiving_country_code, participants) %>% 
-  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>% 
-  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",
-                                  receiving_country_code == "UK" ~ "United Kingdom",
-                                  TRUE ~ country_name)) %>% 
-  group_by(country_name) %>% 
-  mutate(total = sum(participants)) %>% 
-  filter(row_number() == 1) %>% 
-  select(country = country_name, total)
-
-
-france <- erasmus %>% 
-  filter(participant_nationality == "FR")
-
-test <- erasmus %>% 
-  select(receiving_country_code, participants) %>% 
-  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>% 
-  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",
-                                  receiving_country_code == "UK" ~ "United Kingdom",
-                                  TRUE ~ country_name)) %>% 
-  count(country_name, sort = TRUE)
-
-%>% 
-  group_by(country_name) %>% 
-  mutate(total = sum(participants)) %>% 
-  filter(row_number() == 1) %>% 
-  select(country = country_name, total)
-
-verif <- countries %>% 
-  distinct(receiving_country_code, country_name)
-  
-  
-  mutate(receiving_country = case_when(receiving_country_code == "AT" ~ "Austria",
-                                       TRUE ~ receiving_country_code))
-
-list_countries <- unique(countries$receiving_country_code)
-
-erasmus %>% 
-  filter(receiving_country_code == list_countries[34]) %>% 
-  select(receiving_city) %>% 
-  distinct()
-
-countries %>% 
-  filter(receiving_country_code == list_countries[34]) %>% 
-  distinct(receiving_country_code, country_name)
-
-head(countries)
-
-us_states <- tibble(
-  state_name = state.name,
-  state_abb = state.abb)
-
-stations <- stations %>% 
-  filter(FUEL_TYPE_CODE == "ELEC",
-         STATUS_CODE == "E") %>% 
-  count(STATE) %>% 
-  rename(state_abb = STATE, total = n) %>% 
-  left_join(us_states) %>% 
-  mutate(state_name = case_when(state_abb == "DC" ~ "District of Columbia",
-                                TRUE ~ state_name)) %>% 
-  mutate(state_name = tolower(state_name)) %>% 
-  select(state_name, total) %>% 
-  mutate(bin = case_when(total <= 1000 ~ "0-1000",
-                         total > 1000 & total <= 2000 ~ "1000-2000",
-                         total > 2000 & total <= 3000 ~ "2000-3000",
-                         total > 3000 ~ "3000+"))
+ggsave("figs/2022_03_08_erasmus.png", p, dpi = 320, width = 12, height = 6)
 
 # Create map ----
 
