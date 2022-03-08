@@ -1,16 +1,14 @@
 # TidyTuesday challenge
 # Week : 10
 # Date : 2022-03-08
-# Alternative Fuel Stations
-# https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-03-01/readme.md
+# EU Student mobility
+# https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-03-08/readme.md
 
 # Load packages ----
 
-library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
-library(ggflags)
-# library(countrycode)
+library(showtext)
 
 # Import dataset ----
 
@@ -53,47 +51,24 @@ p <- ggplot(data = d1,
        aes(x = country_name, y = total, fill = country_name)) +
   geom_bar(width = 0.9, stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = rep(c("#3caea3", "#173f5f"), 5)) +
-  #scale_fill_manual(values = rev(rainbow(10))) +
-  # scale_fill_manual(values = c("#9999ff", "#7d7fe2", "#6066c6", "#444eaa", "#23388f",
-  #                              "#002275", "#000f5c", "#000044", "#00032c", "#000117")) +
   coord_polar(theta = "y", start = 0) +
   xlab("") +
   ylab("") +
+  labs(caption = "Visualisation : Jonathan Kitt | Data source : Data.Europa | #TidyTuesday 2022 week 10") +
   geom_text(aes(x = country_name, y = 0, label = paste0(country_name, " - ", round(percent, digits = 1), " %")),
             hjust = 1.05, family = "Comfortaa", size = 10, colour = rep(c("#173f5f", "#3caea3"), 5)) +
   ggtitle(label = "Where do french students prefer to go ?",
-          subtitle = "Top 10 destinations for french ERASMUS participants") +
+          subtitle = "Top 10 destinations for french ERASMUS participants (2014-2020") +
   ylim(c(0, 250)) +
   theme_void() +
   theme(plot.background = element_rect(fill = "#d6ecef", colour = "#d6ecef"),
         panel.background = element_rect(fill = "#d6ecef", colour = "#d6ecef"),
         plot.title = element_text(family = "Comfortaa", size = 60, colour = "#173f5f", hjust = 0.5,
                                   margin = margin(t = 20)),
-        plot.subtitle = element_text(family = "Comfortaa", size = 30, colour = "#173f5f", hjust = 0.5))
+        plot.subtitle = element_text(family = "Comfortaa", size = 30, colour = "#173f5f", hjust = 0.5),
+        plot.caption = element_text(colour = "#173f5f", size = 20, hjust = 0.5,
+                                    margin = margin(b = 20)))
 
 # Save plot ----
 
 ggsave("figs/2022_03_08_erasmus.png", p, dpi = 320, width = 12, height = 6)
-
-# Create map ----
-
-us_elec_stations <- map_data("state") %>% 
-  left_join(stations, by = c("region" = "state_name"))
-
-us_map <- ggplot(data = us_elec_stations,
-       mapping = aes(x = long, y = lat, group = group,
-                     fill = bin)) +
-  geom_polygon(colour = "grey30") +
-  ggtitle("Electric car charging stations in the U.S.") +
-  scale_fill_manual(values = c("#f3e9d2", "#88d498", "#1a936f", "#114b5f")) +
-  theme_void() +
-  theme(plot.background = element_rect(fill = "#c2c8c5"),
-        plot.title = element_text(family = "space", size = 45, hjust = 0.5,
-                                  margin = margin(t = 20)),
-        legend.title = element_blank(),
-        legend.text = element_text(family = "space", size = 25),
-        legend.margin = margin(r = 20))
-
-# Save plot ----
-
-ggsave("figs/2022_03_01_fuel.png", us_map, dpi = 320, width = 12, height = 6)
