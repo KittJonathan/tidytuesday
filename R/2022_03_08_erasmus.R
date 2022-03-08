@@ -9,7 +9,7 @@
 library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
-library(countrycode)
+# library(countrycode)
 
 # Import dataset ----
 
@@ -25,12 +25,74 @@ showtext_auto()
 
 # Data wrangling ----
 
-country_codes <- countrycode::codelist %>% 
+country_codes <- countrycode::codelist %>%
   select(iso2c, country_name = country.name.en)
+
+d1 <- erasmus %>% 
+  filter(receiving_country_code != sending_country_code) %>%  # keep mobilities between different countries
+  select(receiving_country_code, participants) %>%   # remove unwanted columns
+  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>%  # add sending country name
+  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",  # add missing country names 
+                                  receiving_country_code == "UK" ~ "United Kingdom",
+                                  receiving_country_code == "CZ" ~ "Czech Republic",
+                                  TRUE ~ country_name)) %>% 
+  group_by(country_name) %>%  # group data by country name
+  mutate(total = sum(participants)) %>%   # count total number of participants for each receiving country
+  filter(row_number() == 1) %>%  # keep 1 row by receiving country
+  arrange(desc(total)) %>%   # arrange data by descending order
+  ungroup() %>%  # ungroup data
+  mutate(percent = 100 * total / sum(total))  # calculate ratio
+
+d2 <- erasmus %>% 
+  filter(receiving_country_code != sending_country_code) %>%  # keep mobilities between different countries
+  select(receiving_country_code, participants) %>%   # remove unwanted columns
+  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>%  # add sending country name
+  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",  # add missing country names 
+                                  receiving_country_code == "UK" ~ "United Kingdom",
+                                  TRUE ~ country_name)) %>% 
+  count(country_name, sort = TRUE)
+
+
+d1 %>% filter(is.na(country_name)) %>% distinct(receiving_country_code)
+
+clean_erasmus <- erasmus %>% 
+  filter(mobility_duration >= 7) %>% 
+  select(receiving_country_code, partic)
+
+
+
 
 countries <- erasmus %>% 
   select(receiving_country_code, participants) %>% 
-  left_join(country_codes, by = c("receiving_country_code" = "iso2c"))
+  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>% 
+  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",
+                                  receiving_country_code == "UK" ~ "United Kingdom",
+                                  TRUE ~ country_name)) %>% 
+  group_by(country_name) %>% 
+  mutate(total = sum(participants)) %>% 
+  filter(row_number() == 1) %>% 
+  select(country = country_name, total)
+
+
+france <- erasmus %>% 
+  filter(participant_nationality == "FR")
+
+test <- erasmus %>% 
+  select(receiving_country_code, participants) %>% 
+  left_join(country_codes, by = c("receiving_country_code" = "iso2c")) %>% 
+  mutate(country_name = case_when(receiving_country_code == "EL" ~ "Greece",
+                                  receiving_country_code == "UK" ~ "United Kingdom",
+                                  TRUE ~ country_name)) %>% 
+  count(country_name, sort = TRUE)
+
+%>% 
+  group_by(country_name) %>% 
+  mutate(total = sum(participants)) %>% 
+  filter(row_number() == 1) %>% 
+  select(country = country_name, total)
+
+verif <- countries %>% 
+  distinct(receiving_country_code, country_name)
   
   
   mutate(receiving_country = case_when(receiving_country_code == "AT" ~ "Austria",
@@ -39,9 +101,13 @@ countries <- erasmus %>%
 list_countries <- unique(countries$receiving_country_code)
 
 erasmus %>% 
-  filter(receiving_country_code == list_countries[1]) %>% 
+  filter(receiving_country_code == list_countries[34]) %>% 
   select(receiving_city) %>% 
   distinct()
+
+countries %>% 
+  filter(receiving_country_code == list_countries[34]) %>% 
+  distinct(receiving_country_code, country_name)
 
 head(countries)
 
