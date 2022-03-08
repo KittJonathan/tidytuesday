@@ -9,6 +9,7 @@
 library(showtext)
 library(tidytuesdayR)
 library(tidyverse)
+library(countrycode)
 
 # Import dataset ----
 
@@ -22,7 +23,27 @@ rm(tuesdata)
 font_add_google(name = "Space Mono", family = "space")
 showtext_auto()
 
-# Clean dataset ----
+# Data wrangling ----
+
+country_codes <- countrycode::codelist %>% 
+  select(iso2c, country_name = country.name.en)
+
+countries <- erasmus %>% 
+  select(receiving_country_code, participants) %>% 
+  left_join(country_codes, by = c("receiving_country_code" = "iso2c"))
+  
+  
+  mutate(receiving_country = case_when(receiving_country_code == "AT" ~ "Austria",
+                                       TRUE ~ receiving_country_code))
+
+list_countries <- unique(countries$receiving_country_code)
+
+erasmus %>% 
+  filter(receiving_country_code == list_countries[1]) %>% 
+  select(receiving_city) %>% 
+  distinct()
+
+head(countries)
 
 us_states <- tibble(
   state_name = state.name,
