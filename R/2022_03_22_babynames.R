@@ -100,7 +100,7 @@ p <- p1 + p2 +
   plot_annotation(
     title = "The rise and fall of popular names",
     subtitle = "(darker shades indicate higher proportions)",
-    caption = "Visualisation: Jonathan Kitt | Data source: Robert M Flight | #TidyTuesday 2022 Week 12",
+    caption = "Visualisation: Jonathan Kitt | Data source: H. Wickham | #TidyTuesday 2022 Week 12",
     theme = theme(plot.background = element_rect(fill = "#9de0ad", colour = "#9de0ad"),
                   panel.background = element_rect(fill = "#9de0ad", colour = "#9de0ad"),
                   plot.title = element_text(family = "Kranky", colour = "black", size = 120, hjust = 0.5,
