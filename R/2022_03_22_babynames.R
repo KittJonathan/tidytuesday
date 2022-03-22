@@ -22,10 +22,40 @@ rm(tuesdata)
 
 # Load fonts ----
 
-font_add_google(name = "Kodchasan", family = "Kodchasan")
-showtext_auto()
+# font_add_google(name = "Kodchasan", family = "Kodchasan")
+# showtext_auto()
 
 # Data wrangling ----
+
+top10_2017_m <- babynames %>% 
+  filter(year == 2017, sex == "M") %>% 
+  arrange(desc(prop)) %>% 
+  head(10) %>% 
+  pull(name)
+
+name_count <- d1 %>% 
+  count(sex, name, n) %>% 
+  mutate(total = n * nn) %>% 
+  group_by(sex, name) %>% 
+  filter(row_number() == 1) %>% 
+  select(sex, name, total)
+
+top10_m <- name_count %>% 
+  filter(sex == "M") %>% 
+  arrange(desc(total)) %>% 
+  head(10)
+
+d1_m <- d1 %>% 
+  filter(sex == "M", name %in% top10_m$name)
+
+ggplot(data = d1_m) +
+  geom_line(aes(x = year, y = n, colour = name))
+
+ggplot(d1_m) +
+  geom_area(aes(x = year, y = prop, fill = name))
+  
+
+head(top10_m)
 
 new_pkgs_years <- bioc %>% 
   mutate(year = year(date)) %>% 
