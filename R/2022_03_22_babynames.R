@@ -27,11 +27,215 @@ rm(tuesdata)
 
 # Data wrangling ----
 
+babynames <- babynames %>% 
+  mutate(code = paste(sex, name, sep = "_")) %>% 
+  select(year, code, everything())
+
+prop_change <-  babynames %>% 
+  filter(year >= 2012) %>% 
+  group_by(code) %>% 
+  mutate(number_years = length(year)) %>% 
+  ungroup() %>% 
+  filter(number_years == 5) %>% 
+  group_by(code) %>% 
+  mutate(prop_change = prop - prop[year == 2012])
+
+top5_increase_f <- prop_change %>% 
+  filter(sex == "F", year == 2017) %>% 
+  arrange(desc(prop_change)) %>% 
+  head(5) %>% 
+  ungroup() %>% 
+  select(code) %>% 
+  left_join(prop_change)
+
+top5_decrease_f <- prop_change %>% 
+  filter(sex == "F", year == 2017) %>% 
+  arrange(prop_change) %>% 
+  head(5) %>% 
+  ungroup() %>% 
+  select(code) %>% 
+  left_join(prop_change)
+
+prop_change_f <- rbind(top5_increase_f, top5_decrease_f) %>% 
+  mutate(name = factor(name, levels = c("Charlotte", "Harper", "Amelia", "Aria", "Scarlett",
+                                        "Ashley", "Emily", "Alyssa", "Alexis", "Madison")))
+
+ggplot(prop_change_f, aes(x = year, y = prop_change, fill = name)) +
+  geom_area(stat = "identity")
+
+  scale_x_continuous(breaks = seq(2008, 2017, 1)) +
+  scale_fill_manual(values = c("#62021e", "#a42153", "#c5558e", "#d483ac", "#e6a6c6",
+                               "#62021e", "#a42153", "#c5558e", "#d483ac", "#e6a6c6"))
+
+ggplot() +
+  geom_line(data = prop_change_f,
+            aes(x = year, y = prop_change, colour = name)) +
+  geom_text(data = prop_change_f %>% filter(year == 2017),
+            aes(x = 2018, y = prop_change, label = name))
+
+  scale_x_continuous(breaks = seq(2008, 2017, 1)) 
+  scale_colour_manual(values = c("#62021e", "#a42153", "#c5558e", "#d483ac", "#e6a6c6")
+
+
+prop_diff_last_ten_years <-
+
+top5_decrease_f <- prop_diff_last_ten_years %>% 
+  filter(sex == "F", year == 2017) %>% 
+  arrange(prop_change_vs_2008) %>% 
+  head(5)
+
+
+
+top10_f <- rbind(top5_decrease_f, top5_increase_f)
+
+test <- prop_diff_last_ten_years %>% 
+  filter(code %in% top5_decrease_f$code)
+
+test2 <- prop_diff_last_ten_years %>% 
+  filter(code %in% top5_increase_f$code)
+
+test3 <- prop_diff_last_ten_years %>% 
+  filter(code %in% top10_f$code)
+
+ggplot() +
+  geom_area(test3, aes(x = year, y = prop_change_vs_2008, fill = name)) +
+  geom_line(test3, aes(x = year, y = prop_change_vs_2008), colour = "white")
+
+ggplot(test3, aes(x = year, y = prop_change_vs_2008, fill = name)) +
+  geom_area()
+
+
+prop_diff_last_ten_years
+
+top5_f_2017 <- d1 %>% 
+  filter(sex == "F", year == 2017) %>% 
+  arrange(desc(prop)) %>% 
+  head(5) %>% 
+  pull(code)
+
+test <- d1 %>% 
+  filter(code %in% top5_f_2017)
+
+ggplot(test, aes(x = year, y = prop, colour = name)) +
+  geom_smooth(se = FALSE)
+
+ggplot(test) +
+  geom_area(aes(x = year, y = prop, fill = name)) +
+  xlim(1880, 2017)
+
+
+###
+
+babynames_clean <- babynames %>% 
+  mutate(code = paste(sex, name, sep = "_")) %>% 
+  select(year, code, everything())
+
+names_1968_2017 <- babynames_clean %>% 
+  filter(year %in% 1968:2017) %>% 
+  count(code) %>% 
+  filter(n == 50)
+
+d1 <- babynames_clean %>% 
+  filter(year %in% 1968:2017, code %in% names_1968_2017$code) %>% 
+  arrange(code, year) %>% 
+  mutate(prop_diff = prop - prop[year == 1968]) %>% 
+  filter(year == 2017) %>% 
+  select(code, sex, name, prop_diff)
+
+top5_m_increase <- d1 %>% 
+  filter(sex == "M") %>% 
+  arrange(desc(prop_diff)) %>% 
+  head(5)
+
+%>% 
+  group_by(code, sex, name) %>% 
+  summarise(change = prop[which.max(year) - prop[which.min(year)]])
+
+top5_decrease_m <- d1 %>% 
+  filter(sex == "M") %>% 
+  arrange(change) %>% 
+  head(5)
+
+top5_increase_f <- d1 %>% 
+  filter(sex == "F") %>% 
+  arrange(desc(change)) %>% 
+  head(5)
+
+test_f <- babynames_clean %>% 
+  filter(code %in% top5_increase_f$code,
+         year %in% 1918:2017)
+
+ggplot(test_f, aes(x = year, y = prop, colour = name)) +
+  geom_line()
+
+  group_by(code) %>% 
+  mutate(prop_diff = prop - lag(prop)) %>% 
+  mutate(prop_diff = replace_na(prop_diff, 0)) %>% 
+  mutate(nb_increase_years = length(which(prop_diff > 0)),
+         nb_decrease_years = length(which(prop_diff < 0)))
+
+d1_f <- d1 %>% 
+  filter(nb_increase_years == 10 |  nb_decrease_years == 10)
+
+test <- d1 %>% 
+  filter(code == "F_Aaron") %>% 
+  mutate(prop_diff = prop - lag(prop)) %>% 
+  mutate(prop_diff = replace_na(prop_diff, 0))
+
+
+
+d1 <- babynames_clean %>% 
+  filter(code %in% names_1968_2017$code,
+         year %in% 1968:2017)
+
+prop_diff <- d1 %>% 
+  filter(year %in% c(1968, 2017)) %>% 
+  arrange(code, year) %>% 
+  group_by(code) %>% 
+  mutate(diff_prop = diff(prop)) %>% 
+  filter(row_number() == 1)
+
+top10_increase_m <- prop_diff %>% 
+  filter(sex == "M") %>% 
+  arrange(desc(diff_prop)) %>% 
+  head(10)
+
+test <- d1 %>% 
+  filter(code %in% top10_increase_m$code)
+
+ggplot(test, aes(x = year, y = n)) +
+  geom_point(aes(colour = name))
+
+d1 <- babynames_clean %>% 
+  filter(year %in% c(1917, 2017)) %>% 
+  count(code) %>% 
+  filter(n == 2) %>% 
+  left_join(babynames_clean, by = "code") %>% 
+  filter(year %in% 1917:2017)
+
+d2 <- babynames %>% 
+  
+
+  group_by(sex, name) %>% 
+  mutate(prop_diff = .$prop[.$year == 2017] - .$prop[.$year == 1880])
+
 top10_2017_m <- babynames %>% 
   filter(year == 2017, sex == "M") %>% 
   arrange(desc(prop)) %>% 
   head(10) %>% 
   pull(name)
+
+top10_2017_f <- babynames %>% 
+  filter(year == 2017, sex == "F") %>% 
+  arrange(desc(prop)) %>% 
+  head(10) %>% 
+  pull(name)
+
+babynames_m <- babynames %>% 
+  filter(name %in% top10_2017_m)
+
+ggplot(babynames_m, aes(x = year, y = n)) +
+  geom_line(aes(colour = name))
 
 name_count <- d1 %>% 
   count(sex, name, n) %>% 
