@@ -6,16 +6,17 @@
 
 # Load packages ----
 
+library(patchwork)
 library(tidytuesdayR)
 library(tidyverse)
-# library(showtext)
+library(showtext)
 # library(ggtext)
 
 # Import fonts ----
 
-# font_add_google(name = "Nova Flat", family = "nova")
-# font_add_google(name = "Akronim", family = "akronim")
-# showtext_auto()
+font_add_google(name = "Marvel", family = "marvel")
+font_add_google(name = "Ranchers", family = "ranchers")
+showtext_auto()
 
 # Import dataset ----
 
@@ -71,57 +72,104 @@ scotland <- scores %>%
 
 # Create plot ----
 
-summary(scores$pts_against)
+p1 <- ggplot(data = england) +
+  geom_line(aes(x = year, y = pts_diff),
+             colour = "#b80d2f", size = 2) +
+  scale_x_continuous(breaks = seq(2007, 2022, 5),
+                     labels = seq(2007, 2022, 5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "white", size = 0.25) +
+  labs(title = "England") +
+  ylim(c(-265, 265)) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black", colour = "black"),
+        plot.background = element_rect(fill = "black", colour = "black"),
+        plot.title = element_text(family = "ranchers", size = 75,
+                                  colour = "#b80d2f", hjust = 0.5, margin = margin(t = 20)))
 
-ggplot(data = scores) +
-  geom_line(aes(x = year, y = pts_diff, colour = team)) +
-  ylim(c(-265, 265))
+p2 <- ggplot(data = france) +
+  geom_line(aes(x = year, y = pts_diff),
+            colour = "#003567", size = 2) +
+  scale_x_continuous(breaks = seq(2007, 2022, 5),
+                     labels = seq(2007, 2022, 5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "white", size = 0.25) +
+  labs(title = "France") +
+  ylim(c(-265, 265)) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black", colour = "black"),
+        plot.background = element_rect(fill = "black", colour = "black"),
+        plot.title = element_text(family = "ranchers", size = 75,
+                                  colour = "#003567", hjust = 0.5, margin = margin(t = 20)))
 
-ggplot(data = england) +
-  geom_point(aes(x = year, y = pts_for), colour = "green") +
-  geom_point(aes(x = year, y = -pts_against), colour = "red") +
-  geom_line(aes(x = year, y = pts_for), colour = "green") +
-  geom_line(aes(x = year, y = -pts_against), colour = "red") +
-  ylim(c(-285, 285))
+p3 <- ggplot(data = wales) +
+  geom_line(aes(x = year, y = pts_diff),
+            colour = "#d8252e", size = 2) +
+  scale_x_continuous(breaks = seq(2007, 2022, 5),
+                     labels = seq(2007, 2022, 5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "white", size = 0.25) +
+  labs(title = "Wales") +
+  ylim(c(-265, 265)) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black", colour = "black"),
+        plot.background = element_rect(fill = "black", colour = "black"),
+        plot.title = element_text(family = "ranchers", size = 75,
+                                  colour = "#d8252e", hjust = 0.5, margin = margin(t = 20)))
 
-ggplot(data = england) +
-  geom_line(aes(x = year, y = pts_for), colour = "green") +
-  geom_line(aes(x = year, y = pts_against), colour = "red") +
-  ylim(c(-255, 285))
+p4 <- ggplot(data = ireland) +
+  geom_line(aes(x = year, y = pts_diff),
+            colour = "#006642", size = 2) +
+  scale_x_continuous(breaks = seq(2007, 2022, 5),
+                     labels = seq(2007, 2022, 5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "white", size = 0.25) +
+  labs(title = "Ireland") +
+  ylim(c(-265, 265)) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black", colour = "black"),
+        plot.background = element_rect(fill = "black", colour = "black"),
+        plot.title = element_text(family = "ranchers", size = 75,
+                                  colour = "#006642", hjust = 0.5, margin = margin(t = 20)))
 
-  geom_line(aes(x = year, y = pts_diff, colour = team))
+p5 <- ggplot(data = italy) +
+  geom_line(aes(x = year, y = pts_diff),
+            colour = "#1460a8", size = 2) +
+  scale_x_continuous(breaks = seq(2007, 2022, 5),
+                     labels = seq(2007, 2022, 5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "white", size = 0.25) +
+  labs(title = "Italy") +
+  ylim(c(-265, 265)) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black", colour = "black"),
+        plot.background = element_rect(fill = "black", colour = "black"),
+        plot.title = element_text(family = "ranchers", size = 75,
+                                  colour = "#1460a8", hjust = 0.5, margin = margin(t = 20)))
 
-p <- ggplot() +
-  geom_point(data = d1,
-            mapping = aes(x = year, y = country, fill = rank, colour = rank),
-            size = 3, shape = 21,
-            show.legend = FALSE) +
-  scale_fill_manual(values = c("#fee101", "#a7a7ad", "#a77044")) +
-  scale_colour_manual(values = c("#fee101", "#a7a7ad", "#a77044")) +
-  labs(
-    x = "",
-    y = "",
-    title = "**EUROVISION CONTEST**",
-    subtitle = "Countries ranking
-    <span style='color:#fee101;'>**1st**</span>, 
-    <span style='color:#a7a7ad;'>**2nd**</span>, and
-    <span style='color:#a77044;'>**3rd**</span>
-    from 1973 to 2022.
-    </span>",
-    caption = "Visualisation : Jonathan Kitt | Data source : Eurovision | #TidyTuesday 2022 week 20") +
-  theme_minimal() +
-  theme(panel.background = element_rect(fill = "#58508d", colour = "#58508d"),
-        plot.background = element_rect(fill = "#58508d", colour = "#58508d"),
-        panel.grid.minor.x = element_line(size = 0.05),
-        panel.grid.major.x = element_line(size = 0.05),
-        panel.grid.major.y = element_line(size = 0.05),
-        plot.title = element_markdown(family = "akronim", size = 100, colour = "white", hjust = 0.5,
-                                      margin = margin(t = 10)),
-        plot.subtitle = element_markdown(family = "akronim", size = 60, colour = "white", hjust = 0.5,
-                                         margin = margin(b = 10)),
-        plot.caption = element_text(colour = "white", size = 25, hjust = 0.5),
-        axis.text = element_text(family = "nova", colour = "white", size = 25))
+p6 <- ggplot(data = scotland) +
+  geom_line(aes(x = year, y = pts_diff),
+            colour = "#144a74", size = 2) +
+  scale_x_continuous(breaks = seq(2007, 2022, 5),
+                     labels = seq(2007, 2022, 5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "white", size = 0.25) +
+  labs(title = "Scotland") +
+  ylim(c(-265, 265)) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black", colour = "black"),
+        plot.background = element_rect(fill = "black", colour = "black"),
+        plot.title = element_text(family = "ranchers", size = 75,
+                                  colour = "#144a74", hjust = 0.5, margin = margin(t = 20)))
+
+p <- p1 + p2 + p3 + p4 + p5 + p6 +
+  plot_layout(ncol = 3) +
+  plot_annotation(title = "Women's Six Nations",
+                  subtitle = "Points differences since 2007",
+                  caption = "Visualisation : Jonathan Kitt | Data source : ScrumQueens | #TidyTuesday 2022 week 21",
+                  theme = theme(panel.background = element_rect(fill = "black", colour = "white"),
+                                plot.background = element_rect(fill = "black", colour = "black"),
+                                plot.title = element_text(family = "marvel", size = 125,
+                                                          colour = "#b700fd", hjust = 0.5,
+                                                          margin = margin(t = 10)),
+                                plot.subtitle = element_text(family = "marvel", size = 100,
+                                                             colour = "#b700fd", hjust = 0.5),
+                                plot.caption = element_text(colour = "white", hjust = 0.5, size = 25)))
 
 # Save plot ----
 
-ggsave("figs/2022_05_17_eurovision.png", p, dpi = 320, width = 12, height = 6)
+ggsave("figs/2022_05_24_rugby.png", p, dpi = 320, width = 12, height = 6)
