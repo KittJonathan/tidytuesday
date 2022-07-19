@@ -21,9 +21,19 @@ showtext_auto()
 
 tuesdata <- tidytuesdayR::tt_load('2022-07-19')
 
-drought <- tuesdata$drought
+technology <- tuesdata$technology
 
 # Data wrangling ----
+
+d1 <- technology %>% 
+  filter(label %in% c("Personal computers", "People with internet access")) %>% 
+  count(year, label)
+
+ggplot(d1, aes(x = year, y = n)) + 
+  geom_point(aes(colour = label)) +
+  geom_line(aes(colour = label))
+
+#####
 
 d1 <- drought %>% 
   mutate(date = str_remove(DATE, "d_"),
