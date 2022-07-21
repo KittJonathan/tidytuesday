@@ -26,6 +26,44 @@ technology <- tuesdata$technology
 # Data wrangling ----
 
 d1 <- technology %>% 
+  filter(iso3c == "FRA", group == "Consumption", category == "Communications")
+
+ggplot() +
+  geom_line(data = filter(d1, label == "People with internet access"),
+            aes(x = year, y = value, colour = label))
+
+# Testing plots ----
+
+cable <- technology %>% 
+  filter(group == "Consumption" & category == "Communications") %>% 
+  filter(label == "Households that subscribe to cable" & iso3c == "FRA")
+
+cellular <- technology %>% 
+  filter(group == "Consumption" & category == "Communications") %>% 
+  filter(label == "Cellular subscriptions" & iso3c == "FRA")
+
+computers <- technology %>% 
+  filter(group == "Consumption" & category == "Communications") %>% 
+  filter(label == "Personal computers" & iso3c == "FRA")
+
+newspapers <- technology %>% 
+  filter(group == "Consumption" & category == "Communications") %>% 
+  filter(label == "Newspaper copies circulated daily" & iso3c == "FRA") 
+
+internet_access <- technology %>% 
+  filter(group == "Consumption" & category == "Communications") %>% 
+  filter(label == "People with internet access" & iso3c == "FRA") 
+
+plot(cable$year, cable$value)
+plot(cellular$year, cellular$value)
+plot(computers$year, computers$value)
+plot(internet_access$year, internet_access$value, type = "b")
+
+
+
+# Data wrangling ----
+
+d1 <- technology %>% 
   filter(label %in% c("Personal computers", "People with internet access")) %>% 
   count(year, label)
 
