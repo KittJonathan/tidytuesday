@@ -57,10 +57,14 @@ solar_france <- technology %>%
   mutate(total_prod_twh = max(value)) %>% 
   ungroup() %>% 
   mutate(share_pct = 100 * value / total_prod_twh) %>% 
-  filter(label == "Electricity from solar (TWH)")
+  filter(label == "Electricity from solar (TWH)") %>% 
+  select(country = iso3c, year, share_pct)
 
 head(solar_france)
-  
+
+ggplot(data = solar_france) +
+  geom_point(aes(x = year, y = share_pct)) +
+  geom_line(aes(x = year, y = share_pct))
 
 %>% 
   group_by(iso3c, year) %>% 
