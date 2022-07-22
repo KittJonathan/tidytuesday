@@ -23,10 +23,135 @@ tuesdata <- tidytuesdayR::tt_load('2022-07-19')
 
 technology <- tuesdata$technology
 
+rm(tuesdata)
+
 # Data wrangling ----
 
-g20 <- c("SAU", "AUS", "CAN", "USA", "IND", "BRA", "TUR", "ZAF", "RUS", "ARG",
-         "MEX", "ESP", "DEU", "FRA", "ITA", "GBR", "CHN", "IDN", "JPN", "KOR")
+solar_global <- technology %>% 
+  filter(year %in% c(2000, 2020),
+         group == "Production",
+         category == "Energy",
+         grepl("TWH", label)) %>% 
+  group_by(iso3c, year) %>% 
+  mutate(total_prod_twh = max(value)) %>% 
+  ungroup() %>% 
+  filter(label == "Electricity from solar (TWH)") %>% 
+  add_count(iso3c) %>% 
+  filter(n == 2) %>% 
+  mutate(share_pct = 100 * value / total_prod_twh) %>% 
+  select(country = iso3c, year, share_pct) %>% 
+  pivot_wider(id_cols = country,
+              names_from = year,
+              values_from = share_pct) %>% 
+  rename(share_pct_2000 = `2000`,
+         share_pct_2020 = `2020`) %>% 
+  filter(!is.na(share_pct_2000), !is.na(share_pct_2020))
+
+wind_global <- technology %>% 
+  filter(year %in% c(2000, 2020),
+         group == "Production",
+         category == "Energy",
+         grepl("TWH", label)) %>% 
+  group_by(iso3c, year) %>% 
+  mutate(total_prod_twh = max(value)) %>% 
+  ungroup() %>% 
+  filter(label == "Electricity from wind (TWH)") %>% 
+  add_count(iso3c) %>% 
+  filter(n == 2) %>% 
+  mutate(share_pct = 100 * value / total_prod_twh) %>% 
+  select(country = iso3c, year, share_pct) %>% 
+  pivot_wider(id_cols = country,
+              names_from = year,
+              values_from = share_pct) %>% 
+  rename(share_pct_2000 = `2000`,
+         share_pct_2020 = `2020`) %>% 
+  filter(!is.na(share_pct_2000), !is.na(share_pct_2020))
+    
+head(solar_global) 
+
+ggplot(data = wind_global) +
+  geom_segment(aes(x = 0, xend = 1,
+                   y = share_pct_2000, yend = share_pct_2020))
+
+  
+  filter(label == "Electricity from solar (TWH)",
+         year %in% c(2000, 2020)) %>% 
+  add_count(iso3c) %>% 
+  filter(n == 2)
+
+head(solar_global)
+
+solar_global <- technology %>% 
+  filter(year %in% c(2000, 2020),
+         group == "Production",
+         category == "Energy",
+         grepl("TWH", label)) %>% 
+  mutate(label = case_when(variable == "Electricity from solar (TWH)" ~ "Solar",
+                           label == "Electricity from wind (TWH)" ~ "Wind",
+                           TRUE ~ as.character(label))) %>% 
+  select(energy = label, country = iso3c, year, prod_twh = value)
+
+combi_count <- global %>% 
+  count(energy, country)
+
+head(global)
+
+%>% 
+  filter(!is.na(prod_twh)) %>% 
+  group_by(energy, country, year) %>% 
+  mutate(total_prod_twh = prod_twh[energy == "Gross output of electric energy (TWH)"])
+
+head(global)
+
+global <- technology %>% 
+  filter(year %in% 2000:2020,
+         group == "Production",
+         category == "Energy",
+         grepl("TWH", label)) %>% 
+  group_by(year) %>% 
+  mutate(total_prod = value[label == "Gross output of electric energy (TWH)"]) %>% 
+  ungroup() %>% 
+  mutate(share_pct = 100 * value / total_prod) %>% 
+  filter(variable %in% c("elec_solar", "elec_wind")) %>% 
+  select(energy_type = label, country = iso3c, year, share_pct) %>% 
+  mutate(energy_type = case_when(energy_type == "Electricity from solar (TWH)" ~ "Solar",
+                                 energy_type == "Electricity from wind (TWH)" ~ "Wind")) %>% 
+  pivot_wider(id_cols = energy_type:country,
+              names_from = year,
+              values_from = share_pct)
+
+%>% 
+  filter(!is.na(`2020`))
+
+ggplot() +
+  geom_segment(data = filter(d1, energy_type == "Solar"),
+            aes(x = 0, xend = 1,
+                y = `2000`, yend = `2020`),
+            colour = "grey") +
+  geom_segment(data = filter(d1, energy_type == "Solar", country == "FRA"),
+               aes(x = 0, xend = 1,
+                   y = `2000`, yend = `2020`),
+               colour = "blue")
+
+ggplot() +
+  geom_segment(data = filter(d1, energy_type == "Wind"),
+               aes(x = 0, xend = 1,
+                   y = `2000`, yend = `2020`),
+               colour = "grey") +
+  geom_segment(data = filter(d1, energy_type == "Wind", country == "FRA"),
+               aes(x = 0, xend = 1,
+                   y = `2000`, yend = `2020`),
+               colour = "blue")
+  
+  
+
+d1 <- energies %>% 
+  group_by(iso3c, year) %>% 
+  mutate(total_prod = value[label == "Gross output of electric energy (TWH)"])
+
+
+
+
 
 g20_energ <- technology %>% 
   filter(iso3c %in% g20, year %in% 2000:2020,
