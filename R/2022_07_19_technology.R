@@ -47,6 +47,37 @@ solar_global <- technology %>%
          share_pct_2020 = `2020`) %>% 
   filter(!is.na(share_pct_2000), !is.na(share_pct_2020))
 
+solar_france <- technology %>% 
+  filter(iso3c == "FRA",
+         year %in% 2000:2020,
+         group == "Production",
+         category == "Energy",
+         grepl("TWH", label)) %>% 
+  group_by(year) %>% 
+  mutate(total_prod_twh = max(value)) %>% 
+  ungroup() %>% 
+  mutate(share_pct = 100 * value / total_prod_twh) %>% 
+  filter(label == "Electricity from solar (TWH)")
+
+head(solar_france)
+  
+
+%>% 
+  group_by(iso3c, year) %>% 
+  mutate(total_prod_twh = max(value)) %>% 
+  ungroup() %>% 
+  filter(label == "Electricity from solar (TWH)") %>% 
+  add_count(iso3c) %>% 
+  filter(n == 2) %>% 
+  mutate(share_pct = 100 * value / total_prod_twh) %>% 
+  select(country = iso3c, year, share_pct) %>% 
+  pivot_wider(id_cols = country,
+              names_from = year,
+              values_from = share_pct) %>% 
+  rename(share_pct_2000 = `2000`,
+         share_pct_2020 = `2020`) %>% 
+  filter(!is.na(share_pct_2000), !is.na(share_pct_2020))
+
 wind_global <- technology %>% 
   filter(year %in% c(2000, 2020),
          group == "Production",
