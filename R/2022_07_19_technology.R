@@ -25,6 +25,50 @@ technology <- tuesdata$technology
 
 # Data wrangling ----
 
+g20 <- c("SAU", "AUS", "CAN", "USA", "IND", "BRA", "TUR", "ZAF", "RUS", "ARG",
+         "MEX", "ESP", "DEU", "FRA", "ITA", "GBR", "CHN", "IDN", "JPN", "KOR")
+
+g20_energ <- technology %>% 
+  filter(iso3c %in% g20, year %in% 2000:2020,
+         group == "Production", category == "Energy",
+         grepl("TWH", label), variable != "elecprod")
+
+ggplot() +
+  geom_tile(data = g20_energ,
+            aes(x = year, y = label, fill = value))
+
+energies <- unique(g20_energ$label)
+
+ggplot() +
+  geom_line(data = filter(energy, label == energies[1]),
+            aes(x = year, y = value, colour = iso3c),
+            show.legend = FALSE) +
+  scale_colour_manual(values = rep("grey", 208)) +
+  geom_line(data = filter(energy, label == energies[1], iso3c == "FRA"),
+            aes(x = year, y = value),
+            colour = "blue")
+
+ggplot() +
+  geom_line(data = filter(g20_energ, label == energies[4]),
+            aes(x = year, y = value, colour = iso3c),
+            show.legend = FALSE) +
+  scale_colour_manual(values = rep("grey", 209)) +
+  geom_line(data = filter(g20_energ, label == energies[4], iso3c == "FRA"),
+            aes(x = year, y = value),
+            colour = "blue")
+
+unique(energy$label)
+
+energy_fr <- technology %>% 
+  filter(iso3c == "FRA", group == "Production", category == "Energy",
+         grepl("TWH", label), variable != "elecprod")
+
+ggplot() +
+  geom_line(data = energy_fr,
+            aes(x = year, y = value, colour = label),
+            show.legend = FALSE)
+
+
 d1 <- technology %>% 
   filter(iso3c == "FRA", group == "Consumption", category == "Communications")
 
