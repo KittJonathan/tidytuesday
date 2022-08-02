@@ -44,11 +44,29 @@ longlat_coords <- tibble(
   lat = unlist(list_lat)
 )
 
+frogs <- frogs %>% 
+  mutate(long = unlist(list_long),
+         lat = unlist(list_lat))
 
+# Create plot ----
 
-ggplot(longlat_coords,
+# Get data from OSM for Crane Prairie Reservoir
+
+map_data <- opq(bbox = c(-121.9, 43.75, -121.7, 43.82)) %>% 
+  add_osm_feature(key = "natural",
+                  value = "water") %>% 
+  osmdata_sf()
+
+ggplot() +
+  geom_sf(data = map_data$osm_polygons,
+          inherit.aes = FALSE,
+          fill = "blue") +
+  geom_point(data = frogs,
+             aes(x = long, y = lat, colour = Subsite))
+
+ggplot(frogs,
        aes(x = long, y = lat)) +
-  geom_point()
+  geom_point(aes(colour = Subsite))
 
   mutate(geometry = str_remove_all(geometry, "("))
   separate(col = geometry, into = c("long", "lat"), sep = " ")
