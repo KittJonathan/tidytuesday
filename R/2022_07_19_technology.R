@@ -31,8 +31,8 @@ d1 <- frogs %>%
   filter(between(week, 38, 46))
 
 ggplot(d1,
-       aes(x = week, y = n, fill = habitat)) +
-  geom_area(alpha = 0.5)
+       aes(x = week, y = n, colour = habitat)) +
+  geom_line()
 
 d1
 
