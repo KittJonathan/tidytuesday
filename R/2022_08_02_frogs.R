@@ -10,12 +10,56 @@
 
 # library(showtext)
 # library(ggtext)
-# library(tidytuesdayR)
+library(osmdata)
 library(sf)
-# library(sp)
-# library(terra)
-# library(ggridges)
 library(tidyverse)
+
+# Import dataset ----
+
+frogs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-08-02/frog.csv')
+
+# Data wrangling ----
+
+# To convert UTM coords to lat long : https://stackoverflow.com/questions/67106215/sf-from-utm-to-latitude-longitude
+
+utm_coords <- frogs %>% 
+  select(UTME_83, UTMN_83)
+
+longlat <- st_as_sf(x = utm_coords,
+                    coords = c("UTME_83", "UTMN_83"),
+                    crs = "+proj=utm +zone=10") %>% 
+  st_transform(crs = "+proj=longlat +datum=WGS84") %>% 
+  as_tibble()
+
+list_long <- list()
+list_lat <- list()
+
+for (i in 1:nrow(longlat)) {
+  list_long[[i]] <- longlat$geometry[[i]][1]
+  list_lat[[i]] <- longlat$geometry[[i]][2]
+}
+
+longlat_coords <- tibble(
+  long = unlist(list_long),
+  lat = unlist(list_lat)
+)
+
+
+
+ggplot(longlat_coords,
+       aes(x = long, y = lat)) +
+  geom_point()
+
+  mutate(geometry = str_remove_all(geometry, "("))
+  separate(col = geometry, into = c("long", "lat"), sep = " ")
+
+head(longlat)
+
+  separate()
+
+
+d1 <- frogs %>% 
+  mutate()
 
 utm_coords <- frogs %>% 
   select(UTME_83, UTMN_83)
@@ -29,10 +73,19 @@ sfc <- st_transform(coords_sf, crs = "+proj=longlat +datum=WGS84")
 sfc_tibble <- as_tibble(sfc)
 sfc_tibble$geometry
 
+# Map of Oregon ----
 
-head(utm_coords)
+water <- opq("Oregon") %>% 
+  add_osm_feature(key = "natural",
+                  value = "water") %>% 
+  osmdata_sf()
 
-v <- vect(utm_coords, crs = "+proj=utm +zone=10 +datum=WGS84 +units=m")
+ggplot() +
+  geom_sf(data = water$osm_polygons,
+            inherit.aes = FALSE,
+            colour = "blue", fill = "blue") +
+
+
 
 # Import fonts ----
 
