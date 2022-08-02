@@ -11,6 +11,7 @@
 # library(showtext)
 # library(ggtext)
 library(osmdata)
+library(gganimate)
 library(sf)
 library(tidyverse)
 
@@ -52,28 +53,44 @@ frogs <- frogs %>%
 
 # Get data from OSM for Crane Prairie Reservoir
 
-water <- opq(bbox = c(-121.9, 43.75, -121.7, 43.82)) %>% 
+water <- opq(bbox = c(-121.83, 43.76, -121.76, 43.815)) %>% 
   add_osm_feature(key = "natural",
                   value = "water") %>% 
   osmdata_sf()
 
-river <- opq(bbox = c(-121.9, 43.75, -121.7, 43.82)) %>% 
+river <- opq(bbox = c(-121.83, 43.76, -121.76, 43.815)) %>% 
   add_osm_feature(key = "waterway",
                   value = "river") %>% 
   osmdata_sf()
 
-ggplot() +
+(p <- ggplot() +
   geom_sf(data = water$osm_polygons,
           inherit.aes = FALSE,
-          fill = "blue") +
+          fill = "#cae9f5", colour = "#cae9f5") +
   geom_sf(data = river$osm_lines,
           inherit.aes = FALSE,
-          colour = "blue") +
+          colour = "#cae9f5", size = 1.5) +
   geom_point(data = frogs,
-             aes(x = long, y = lat, colour = Subsite)) +
-  coord_sf(xlim = c(-121.9, -121.7),
-           ylim = c(43.75, 43.82),
-           expand = TRUE) 
+             aes(x = long, y = lat, colour = HabType),
+             size = 3, alpha = 0.5) +
+  scale_colour_manual(values = c("Pond" = "#e69f00",
+                                 "Reservoir" = "#999999",
+                                 "River" = "#0072b2")) +
+  coord_sf(xlim = c(-121.83, -121.76),
+           ylim = c(43.76, 43.815),
+           expand = TRUE) +
+  labs(title = "Oregon spotted frogs",
+       subtitle = "observed at Crane Prairie Reservoir",
+       caption = "plot caption") +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "#f0f8ff", colour = NA),
+        panel.grid = element_blank(),
+        plot.background = element_rect(fill = "#f0f8ff", colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+)
+
+ggsave("figs/2022_08_02_frogs.png", p, dpi = 320, width = 12, height = 6)
 
 ggplot(frogs,
        aes(x = long, y = lat)) +
