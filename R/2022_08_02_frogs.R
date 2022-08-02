@@ -52,17 +52,28 @@ frogs <- frogs %>%
 
 # Get data from OSM for Crane Prairie Reservoir
 
-map_data <- opq(bbox = c(-121.9, 43.75, -121.7, 43.82)) %>% 
+water <- opq(bbox = c(-121.9, 43.75, -121.7, 43.82)) %>% 
   add_osm_feature(key = "natural",
                   value = "water") %>% 
   osmdata_sf()
 
+river <- opq(bbox = c(-121.9, 43.75, -121.7, 43.82)) %>% 
+  add_osm_feature(key = "waterway",
+                  value = "river") %>% 
+  osmdata_sf()
+
 ggplot() +
-  geom_sf(data = map_data$osm_polygons,
+  geom_sf(data = water$osm_polygons,
           inherit.aes = FALSE,
           fill = "blue") +
+  geom_sf(data = river$osm_lines,
+          inherit.aes = FALSE,
+          colour = "blue") +
   geom_point(data = frogs,
-             aes(x = long, y = lat, colour = Subsite))
+             aes(x = long, y = lat, colour = Subsite)) +
+  coord_sf(xlim = c(-121.9, -121.7),
+           ylim = c(43.75, 43.82),
+           expand = TRUE) 
 
 ggplot(frogs,
        aes(x = long, y = lat)) +
