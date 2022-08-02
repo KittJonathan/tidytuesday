@@ -1,30 +1,64 @@
 # TidyTuesday challenge
-# Week : 29
-# Date : 2022-07-19
-# Technology adoption over time
-# https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-06-14
+# Week : 31
+# Date : 2022-08-02
+# Oregon spotted frog
+# https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-08-02
 
 # Load packages ----
 
-library(showtext)
-library(ggtext)
-library(tidytuesdayR)
+# library(showtext)
+# library(ggtext)
+# library(tidytuesdayR)
 library(tidyverse)
 
 # Import fonts ----
 
-font_add_google(name = "Jura", family = "Jura")
-showtext_auto()
+# font_add_google(name = "Jura", family = "Jura")
+# showtext_auto()
 
 # Import dataset ----
 
-tuesdata <- tidytuesdayR::tt_load('2022-07-19')
-
-technology <- tuesdata$technology
-
-rm(tuesdata)
+frogs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-08-02/frog.csv')
 
 # Data wrangling ----
+
+d1 <- frogs %>% 
+  select(habitat = HabType,
+         date = SurveyDate) %>% 
+  mutate(date2 = lubridate::mdy(date)) %>% 
+  mutate(week = lubridate::week(date2)) %>% 
+  count(week, habitat) %>% 
+  filter(between(week, 38, 46))
+
+ggplot(d1,
+       aes(x = week, y = n, fill = habitat)) +
+  geom_area(alpha = 0.5)
+
+d1
+
+%>% 
+  count(date2, habitat)
+
+ggplot() +
+  geom_tile(data = d1,
+            aes(x = week, y = habitat, fill = n))
+
+  separate(col = date, into = c("month", "day", "year"), sep = "/") %>% 
+  mutate(date = lubridate::ym(paste(year, month, sep = "-"))) %>% 
+  count(date, habitat)
+
+head(d1)
+
+  mutate(year = lubridate::mdy(date))
+
+%>% 
+  mutate(date = lubridate::mdy(date))
+
+%>% 
+  mutate(date = lubridate::ym(date))
+
+head(d1)
+  
 
 d1 <- technology %>% 
   filter(iso3c == "FRA",
