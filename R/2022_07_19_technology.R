@@ -30,6 +30,11 @@ d1 <- frogs %>%
   count(week, habitat) %>% 
   filter(between(week, 38, 46))
 
+ggplot(data = d1) +
+  geom_tile(aes(x = week, y = habitat, fill = n),
+            colour = "darkgreen", size = 0.25) +
+  scale_fill_gradient(low = "#cefad0", high = "#008631")
+
 ggplot(d1,
        aes(x = week, y = n, colour = habitat)) +
   geom_line()
