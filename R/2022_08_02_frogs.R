@@ -3,14 +3,36 @@
 # Date : 2022-08-02
 # Oregon spotted frog
 # https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-08-02
+# https://www.latlong.net/lat-long-utm.html
+# https://stackoverflow.com/questions/67106215/sf-from-utm-to-latitude-longitude
 
 # Load packages ----
 
 # library(showtext)
 # library(ggtext)
 # library(tidytuesdayR)
-library(ggridges)
+library(sf)
+# library(sp)
+# library(terra)
+# library(ggridges)
 library(tidyverse)
+
+utm_coords <- frogs %>% 
+  select(UTME_83, UTMN_83)
+
+coords_sf <- st_as_sf(x = utm_coords,
+                      coords = c("UTME_83", "UTMN_83"),
+                      crs = "+proj=utm +zone=10")
+
+sfc <- st_transform(coords_sf, crs = "+proj=longlat +datum=WGS84")
+
+sfc_tibble <- as_tibble(sfc)
+sfc_tibble$geometry
+
+
+head(utm_coords)
+
+v <- vect(utm_coords, crs = "+proj=utm +zone=10 +datum=WGS84 +units=m")
 
 # Import fonts ----
 
