@@ -35,10 +35,18 @@ apod <- apod |>
          
 # Plot ----
 
-apod |> 
+p <- apod |> 
   filter(year >= 2021) |> 
   ggplot(aes(x = year, y = fct_rev(planet), fill = total)) +
-  geom_point(aes(colour = total), size = 15)
-  geom_tile(width = 0.5, height = 0.5, show.legend = FALSE) +
-  geom_text(aes(label = total))
+  geom_point(aes(colour = total), size = 15,
+             show.legend = FALSE) + 
+  geom_text(aes(label = total), size = 10) +
+  scale_colour_gradient2(low = "#008080", 
+                       high = "#75dad7", midpoint = 12) +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "black"),
+        plot.background = element_rect(fill = "black"),
+        axis.title = element_blank(),
+        axis.text = element_text(colour = "white"))
     
+ggsave("2026/tt_2026_03.png", p, dpi = 320, height = 6, width = 12)
