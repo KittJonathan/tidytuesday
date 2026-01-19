@@ -24,16 +24,21 @@ apod <- apod |>
                             str_detect(string = title, pattern = "Saturn") ~ "Saturn",
                             str_detect(string = title, pattern = "Uranus") ~ "Uranus",
                             str_detect(string = title, pattern = "Neptune") ~ "Neptune",
-                            .default = NA)
-  ) |> 
-  drop_na(planet)
-         
-apod |> 
+                            .default = NA),
+         planet = fct(planet, levels = c("Mercury", "Venus", "Earth", "Mars",
+                                         "Jupiter", "Saturn", "Uranus", "Neptune"))
+         ) |> 
+  drop_na(planet) |> 
+  select(date, planet) |> 
   mutate(year = year(date)) |> 
-  count(year, planet) |> 
-  complete(year, planet, fill = list(n = 0)) |> 
-  ggplot(aes(x = year, y = planet, fill = n)) +
-  geom_point()
-  
-
+  summarise(total = n(), .by = c(year, planet))
+         
 # Plot ----
+
+apod |> 
+  filter(year >= 2021) |> 
+  ggplot(aes(x = year, y = fct_rev(planet), fill = total)) +
+  geom_point(aes(colour = total), size = 15)
+  geom_tile(width = 0.5, height = 0.5, show.legend = FALSE) +
+  geom_text(aes(label = total))
+    
