@@ -12,16 +12,22 @@ library(tidytuesdayR)
 # Data ----
 
 tuesdata <- tidytuesdayR::tt_load(2026, week = 5)
-edible_plants <- tuesdata$edible_plants
 
-edible_plants |> 
-  summarise(min_temp = min(temperature_germination),
-            max_temp = max(temperature_germination),
-            .by = cultivation)
+edible_plants <- tuesdata$edible_plants |> 
+  mutate(
+    sunlight = case_when(sunlight == "partial shade" ~ "Partial shade",
+                         sunlight == "full sun/partial shade/ full shade" ~ "Full sun/partial shade/full shade",
+                         .default = sunlight),
+    water = case_when(water == "high" ~ "High",
+                      water == "Very low" ~ "Very Low",
+                      water == "very high" ~ "Very High",
+                      .default = water))
+
+ggplot(edible_plants) +
+  geom_point(aes(x = sunlight, y = water))
 
 # Plot ----
 
 ggplot(edible_plants) +
-  geom_segment(aes(x = preferred_ph_lower, xend = preferred_ph_upper,
-                   y = taxonomic_name, yend = taxonomic_name,
-                   color = sunlight))
+  geom_point(aes(x = sunlight,
+                 y = temperature_germination))
