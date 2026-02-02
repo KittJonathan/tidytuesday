@@ -8,7 +8,7 @@
 
 library(tidyverse)
 library(tidytuesdayR)
-library(ggdist)
+# library(ggdist)
 # library(sysfonts)
 
 # font_add_google("Roboto")
@@ -45,6 +45,27 @@ companies |>
 
          
 # Plot ----
+
+companies |> 
+  summarise(capital_min = min(capital_stock),
+            capital_median = median(capital_stock),
+            capital_max = max(capital_stock),
+            .by = legal_nature) |> 
+  mutate(legal_nature = fct_reorder(.f = factor(legal_nature), 
+                                    .x = capital_median)) |> 
+  ggplot() +
+  geom_point(aes(x = capital_median, y = legal_nature)) +
+  geom_segment(aes(x = capital_min, xend = capital_max, y = legal_nature, yend = legal_nature)) +
+  scale_x_log10()
+
+ggplot(companies,
+       aes(x = capital_stock, y = company_size)) +
+  geom_boxplot()
+
+companies |> 
+  filter(!capital_stock %in% boxplot.stats(capital_stock)$out) |> 
+  ggplot(aes(x = capital_stock, y = legal_nature)) +
+  geom_boxplot()
 
 
 ggsave("2026/tt_2026_03.png", p, dpi = 320, height = 6, width = 12)
