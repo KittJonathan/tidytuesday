@@ -21,10 +21,24 @@ library(tidytuesdayR)
 tuesdata <- tidytuesdayR::tt_load(2026, week = 6)
 schedule <- tuesdata$schedule
 
-head(schedule)
+medals <- schedule |> 
+  select(date, discipline_name, event_description, is_medal_event) |> 
+  filter(is_medal_event == TRUE | str_detect(event_description, "Medal")) |>
+  mutate(gold = case_when(str_detect(event_description, "Bronze") ~ FALSE,
+                          .default = TRUE),
+         silver = case_when(str_detect(event_description, "Bronze") ~ FALSE,
+                          .default = TRUE),
+         bronze = case_when(str_detect(event_description, "Gold") ~ FALSE,
+                            .default = TRUE)) |>
+  # summarise(gold = sum(gold),
+  #           silver = sum(silver),
+  #           bronze = sum(bronze),
+  #           .by = c(date, discipline_name)) |> 
+  complete(date, discipline_name, fill = list(gold = 0, silver = 0, bronze = 0)) |> 
+  arrange(date, discipline_name)
 
-schedule |> 
-  distinct(discipline_name)
+medals |> 
+  filter(discipline_name == "Curling")
 
 schedule |> 
   distinct(event_code)
