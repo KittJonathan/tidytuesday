@@ -15,11 +15,12 @@ library(tidytuesdayR)
 # font_add_google("Roboto")
 # showtext::showtext_auto()
 
-
-# Data ----
+# Get the data ----
 
 tuesdata <- tidytuesdayR::tt_load(2026, week = 6)
 schedule <- tuesdata$schedule
+
+# Explore the data ----
 
 medals <- schedule |> 
   select(date, discipline_name, event_description, is_medal_event) |> 
