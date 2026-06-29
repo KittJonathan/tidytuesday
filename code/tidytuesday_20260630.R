@@ -11,6 +11,8 @@ library(tidyverse)
 library(maps)
 library(ggauto)
 
+theme_set(theme_bw())
+
 # Data ----
 
 wreck_inventory <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2026/2026-06-30/wreck_inventory.csv')
@@ -23,6 +25,9 @@ wreck_inventory |>
   drop_na(date, latitude, longitude) |> 
   ggauto(longitude, latitude, )
 
+wrecks <- wreck_inventory |> 
+  drop_na(date, longitude, latitude)
+
 # Create map ----
 
 worldmap <- map_data(map = "world")
@@ -31,6 +36,14 @@ ireland <- worldmap |>
   filter(region == "Ireland" | (region == "UK" & subregion == "Northern Ireland"))
 
 ggplot() +
-  geom_polygon(data = ireland, aes(x = long, y = lat, group = group)) +
-  geom_point(data = wreck_inventory, 
-             aes(x = longitude, y = latitude))
+  geom_polygon(data = ireland, aes(x = long, y = lat, group = group),
+               fill = "blue", color = "blue") +
+  geom_point(data = wrecks, 
+             aes(x = longitude, y = latitude),
+             alpha = 0.2, color = "red") +
+  coord_fixed()
+
+wrecks |> 
+  summarise(total = n(), .by = year) |>
+  ggplot() +
+  geom_line(aes(x = year, y = total))
