@@ -23,10 +23,11 @@ glimpse(wreck_inventory)
 
 wreck_inventory |> 
   drop_na(date, latitude, longitude) |> 
-  ggauto(longitude, latitude, )
+  
 
 wrecks <- wreck_inventory |> 
-  drop_na(date, longitude, latitude)
+  drop_na(date, longitude, latitude) |> 
+  filter(year < 1950)
 
 # Create map ----
 
@@ -40,10 +41,11 @@ ggplot() +
                fill = "blue", color = "blue") +
   geom_point(data = wrecks, 
              aes(x = longitude, y = latitude),
-             alpha = 0.2, color = "red") +
+             alpha = 0.2) +
   coord_fixed()
 
 wrecks |> 
+  filter(year >= 1926) |> 
   summarise(total = n(), .by = year) |>
   ggplot() +
   geom_line(aes(x = year, y = total))
