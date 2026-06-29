@@ -1,0 +1,36 @@
+# TidyTuesday challenge
+# 2026-W36
+# 2026-06-30
+# Wreck Inventory of Ireland
+
+# https://github.com/rfordatascience/tidytuesday/blob/main/data/2026/2026-06-30/readme.md
+
+# Packages ----
+
+library(tidyverse)
+library(maps)
+library(ggauto)
+
+# Data ----
+
+wreck_inventory <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2026/2026-06-30/wreck_inventory.csv')
+
+# Explore data ----
+
+glimpse(wreck_inventory)
+
+wreck_inventory |> 
+  drop_na(date, latitude, longitude) |> 
+  ggauto(longitude, latitude, )
+
+# Create map ----
+
+worldmap <- map_data(map = "world")
+
+ireland <- worldmap |> 
+  filter(region == "Ireland" | (region == "UK" & subregion == "Northern Ireland"))
+
+ggplot() +
+  geom_polygon(data = ireland, aes(x = long, y = lat, group = group)) +
+  geom_point(data = wreck_inventory, 
+             aes(x = longitude, y = latitude))
