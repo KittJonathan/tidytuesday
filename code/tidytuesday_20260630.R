@@ -22,7 +22,7 @@ wreck_inventory <- readr::read_csv('https://raw.githubusercontent.com/rfordatasc
 glimpse(wreck_inventory)
 
 wreck_inventory |> 
-  drop_na(date, latitude, longitude) |> 
+  drop_na(date, latitude, longitude)
   
 
 wrecks <- wreck_inventory |> 
@@ -40,7 +40,7 @@ ggplot() +
   geom_polygon(data = ireland, aes(x = long, y = lat, group = group),
                fill = "blue", color = "blue") +
   geom_point(data = wrecks, 
-             aes(x = longitude, y = latitude),
+             aes(x = longitude, y = latitude, color = as.factor(year)),
              alpha = 0.2) +
   coord_fixed()
 
@@ -49,3 +49,8 @@ wrecks |>
   summarise(total = n(), .by = year) |>
   ggplot() +
   geom_line(aes(x = year, y = total))
+
+wreck_inventory |> 
+  drop_na(date, year, longitude, latitude) |> 
+  count(year) |> 
+  arrange(year)
