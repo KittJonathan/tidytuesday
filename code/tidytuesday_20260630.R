@@ -10,10 +10,10 @@
 
 library(tidyverse)
 library(patchwork)
-library(marmap)
-library(sf)
-library(rnaturalearth)
-# library(maps)
+# library(marmap)
+# library(sf)
+# library(rnaturalearth)
+library(maps)
 # library(ggauto)
 
 # Data ----
@@ -23,22 +23,52 @@ library(rnaturalearth)
 wreck_inventory <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2026/2026-06-30/wreck_inventory.csv')
 
 wrecks <- wreck_inventory |> 
+  # Keep rows when year, longitude are latitude have no NAs
   drop_na(year, longitude, latitude) |> 
+  # Keep years between 1900 & 1950
   filter(between(year, 1900, 1950)) |> 
+  # Select variables
   select(wreck_no, year, longitude, latitude) |> 
+  # Add WWI/WWII info
   mutate(war = case_when(between(year, 1914, 1918) ~ "World War I",
                          between(year, 1939, 1945) ~ "World War II"))
 
-# 🌍 Bathymetric data - {marmap} package
+# Plot ----
 
-bathy <- getNOAA.bathy(lon1 = min(wrecks$longitude) - 1, 
-                     lon2 = max(wrecks$longitude) + 1, 
-                     lat1 = min(wrecks$latitude) - 1, 
-                     lat2 = max(wrecks$latitude) + 1, 
-                     res = 1, 
-                     keep = TRUE)
+# Map
 
-bathy <- as.xyz(bathy)
+world <- rnaturalearth::ne_coastline(scale = "large", returnclass = "sf")
+
+ggplot() +
+  geom_sf(data = world, colour = "#2874A6", linewidth = 0.4) +
+  geom_point(data = drop_na(wrecks, war), 
+             aes(x = longitude, y = latitude, color = war),
+             size = 0.4,
+             show.legend = FALSE) +
+  coord_sf(xlim = c(-25, -3),
+           ylim = c(46, 58), expand = FALSE) +
+  labs(title = "Shipwrecks in Ireland during World War I & World War II") +
+  theme_void() +
+  theme(
+    plot.background = element_rect(fill = "#0A3D62", colour = "#0A3D62"),
+    panel.background = element_rect(fill = "#0A3D62", colour = "#0A3D62")
+  )
+
+ggplot(ireland_hi) +
+  geom_sf(fill = "#2E8B57", colour = "white") +
+  labs(title = "Ireland") +
+  theme_minimal()
+
+world <- rnaturalearth::ne_countries()
+
+ggplot(world) +
+  geom_sf()
+
+ggplot() +
+  geom_polygon(data = worldmap, aes(x = long, y = lat, group = group),
+               fill = "blue", color = "blue") +
+  coord_fixed(lim)
+  
 
 # Plots 
 
@@ -79,16 +109,7 @@ ggplot() +
 ireland <- countries110 |> 
   filter(SOVEREIGNT == "Ireland")
 
-ireland_hi <- ne_countries(
-  country    = "Ireland",
-  scale      = "large",
-  returnclass = "sf"
-)
 
-ggplot(ireland) +
-  geom_sf(fill = "#2E8B57", colour = "white") +
-  labs(title = "Ireland") +
-  theme_minimal()
 
 # Data ----
 
@@ -131,7 +152,9 @@ wrecks <- wreck_inventory |>
 
 # Create map ----
 
-worldmap <- map_data(map = "world")
+
+
+
 
 ireland <- worldmap |> 
   filter(region == "Ireland" | (region == "UK" & subregion == "Northern Ireland"))
